@@ -129,6 +129,12 @@ const reservationsRoutes = require("./routes/reservations.routes");
 const approvalsRoutes = require("./routes/approvals.routes");
 const reportsRoutes = require("./routes/reports.routes");
 const exportRoutes = require("./routes/export.routes");
+const suppliersRoutes = require("./routes/suppliers.routes");
+const purchaseOrdersRoutes = require("./routes/purchaseOrders.routes");
+const categoriesRoutes = require("./routes/categories.routes");
+const stockTransfersRoutes = require("./routes/stockTransfers.routes");
+const stockMovementsRoutes = require("./routes/stockMovements.routes");
+const notificationsRoutes = require("./routes/notifications.routes");
 
 // API routes
 const API_PREFIX = "/api/v1";
@@ -154,6 +160,12 @@ app.use(`${API_PREFIX}/reservations`, reservationsRoutes);
 app.use(`${API_PREFIX}/approvals`, approvalsRoutes);
 app.use(`${API_PREFIX}/reports`, reportsRoutes);
 app.use(`${API_PREFIX}/export`, exportRoutes);
+app.use(`${API_PREFIX}/suppliers`, suppliersRoutes);
+app.use(`${API_PREFIX}/purchase-orders`, purchaseOrdersRoutes);
+app.use(`${API_PREFIX}/categories`, categoriesRoutes);
+app.use(`${API_PREFIX}/stock-transfers`, stockTransfersRoutes);
+app.use(`${API_PREFIX}/stock-movements`, stockMovementsRoutes);
+app.use(`${API_PREFIX}/notifications`, notificationsRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
