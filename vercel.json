@@ -15,10 +15,5 @@
       "source": "/health",
       "destination": "/api"
     }
-  ],
-  "env": {
-    "MONGODB_URI": "@mongodb-uri",
-    "JWT_SECRET": "@jwt-secret",
-    "NODE_ENV": "production"
-  }
+  ]
 }
