@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { assignmentSchema } from "@/lib/validations"
-import { Button } from "@/components/ui/button"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { assignmentSchema } from "@/lib/validations";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -11,19 +11,25 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
-export function AssignmentForm({ defaultValues, onSubmit, isLoading, items = [], users = [] }) {
+export function AssignmentForm({
+  defaultValues,
+  onSubmit,
+  isLoading,
+  items = [],
+  users = [],
+}) {
   const form = useForm({
     resolver: zodResolver(assignmentSchema),
     defaultValues: defaultValues || {
@@ -33,7 +39,7 @@ export function AssignmentForm({ defaultValues, onSubmit, isLoading, items = [],
       serial_numbers_assigned: "",
       notes: "",
     },
-  })
+  });
 
   return (
     <Form {...form}>
@@ -44,50 +50,70 @@ export function AssignmentForm({ defaultValues, onSubmit, isLoading, items = [],
           render={({ field }) => (
             <FormItem>
               <FormLabel>Item *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value?.toString()}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select item" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {items.map((item) => (
-                    <SelectItem key={item._id} value={item._id.toString()}>
-                      {item.name} ({item.quantity} available)
+                  {items && items.length > 0 ? (
+                    items.map((item) => (
+                      <SelectItem key={item._id} value={item._id.toString()}>
+                        {item.name} (
+                        {item.available_quantity || item.quantity || 0}{" "}
+                        available)
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      No items available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="user_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Assign To</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value?.toString()}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select user (optional)" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user._id} value={user._id.toString()}>
-                      {user.username} - {user.email}
+                  {users && users.length > 0 ? (
+                    users.map((user) => (
+                      <SelectItem key={user._id} value={user._id.toString()}>
+                        {user.full_name || user.username} - {user.email}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      No users available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="assigned_quantity"
@@ -101,7 +127,7 @@ export function AssignmentForm({ defaultValues, onSubmit, isLoading, items = [],
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="serial_numbers_assigned"
@@ -115,7 +141,7 @@ export function AssignmentForm({ defaultValues, onSubmit, isLoading, items = [],
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="notes"
@@ -129,12 +155,12 @@ export function AssignmentForm({ defaultValues, onSubmit, isLoading, items = [],
             </FormItem>
           )}
         />
-        
+
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Create Assignment
         </Button>
       </form>
     </Form>
-  )
+  );
 }
