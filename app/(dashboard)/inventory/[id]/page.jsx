@@ -58,33 +58,34 @@ export default function ItemDetailsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/inventory">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <h2 className="text-3xl font-bold tracking-tight">{item.name}</h2>
-        </div>
-        {canEdit && (
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href={`/inventory/${item.id}/edit`}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
+    <div className="container mx-auto p-6 max-w-5xl">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" asChild>
+              <Link href="/inventory">
+                <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
+            <h2 className="text-3xl font-bold tracking-tight">{item.name}</h2>
           </div>
-        )}
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2">
+          {canEdit && (
+            <div className="flex gap-2">
+              <Button variant="outline" asChild>
+                <Link href={`/inventory/${item.id}/edit`}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </Link>
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
@@ -155,6 +156,7 @@ export default function ItemDetailsPage() {
             </CardContent>
           </Card>
         )}
+      </div>
       </div>
     </div>
   )

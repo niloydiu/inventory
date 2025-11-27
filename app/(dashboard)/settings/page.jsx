@@ -8,10 +8,11 @@ export default function SettingsPage() {
   const { user, logout } = useAuth()
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-      
-      <Card>
+    <div className="container mx-auto p-6 max-w-3xl">
+      <div className="space-y-6">
+        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+        
+        <Card>
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>
           <CardDescription>
@@ -45,6 +46,7 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }
