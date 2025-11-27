@@ -66,18 +66,19 @@ export default function AssignmentsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Assignments</h2>
-        <Button asChild>
-          <Link href="/assignments/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New Assignment
-          </Link>
-        </Button>
-      </div>
-      
-      <AssignmentTable 
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold tracking-tight">Assignments</h2>
+          <Button asChild>
+            <Link href="/assignments/new">
+              <Plus className="mr-2 h-4 w-4" />
+              New Assignment
+            </Link>
+          </Button>
+        </div>
+        
+        <AssignmentTable 
         assignments={assignments} 
         onReturn={(assignment) => {
           setReturnDialog(assignment)
@@ -122,6 +123,7 @@ export default function AssignmentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   )
 }
