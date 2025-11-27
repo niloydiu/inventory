@@ -1,9 +1,9 @@
 const { Item } = require('../models');
 
-// Get all items
+// Get all items with pagination
 exports.getAllItems = async (req, res) => {
   try {
-    const { category, status, search } = req.query;
+    const { category, status, search, page = 1, limit = 50 } = req.query;
     
     let filter = {};
 
@@ -22,11 +22,25 @@ exports.getAllItems = async (req, res) => {
       ];
     }
 
-    const items = await Item.find(filter).sort({ created_at: -1 });
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const items = await Item.find(filter)
+      .sort({ created_at: -1 })
+      .limit(parseInt(limit))
+      .skip(skip);
+
+    const total = await Item.countDocuments(filter);
 
     res.json({
       success: true,
-      data: items
+      data: {
+        items,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
     });
   } catch (error) {
     console.error('Get items error:', error);
