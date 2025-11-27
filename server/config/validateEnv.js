@@ -3,6 +3,12 @@
  * Ensures all required environment variables are set before starting the server
  */
 function validateEnv() {
+  // Skip validation during build time (Vercel builds)
+  if (process.env.VERCEL_ENV || process.env.NEXT_PHASE === 'phase-production-build') {
+    console.log('⏭️  Skipping environment validation during build phase');
+    return;
+  }
+
   const required = ['MONGODB_URI', 'JWT_SECRET'];
   const missing = required.filter(key => !process.env[key]);
   
