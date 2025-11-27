@@ -1,8 +1,8 @@
 # Inventory Management System
 
-A modern, full-featured inventory management system built with Next.js 16 and React.
+A modern, full-featured inventory management system built with Next.js 16 and Express.js backend with PostgreSQL.
 
-## Features
+## ✨ Features
 
 - 📊 **Dashboard** - Real-time overview with statistics and recent items
 - 📦 **Inventory Management** - Complete CRUD operations for items
@@ -18,48 +18,85 @@ A modern, full-featured inventory management system built with Next.js 16 and Re
 - 🔍 **Audit Logs** - Track all system changes
 - ⚙️ **Settings** - Customizable system configuration
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- **Framework**: Next.js 16 (App Router, Turbopack)
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui (Radix UI)
-- **Charts**: Recharts
-- **Authentication**: Custom JWT-based auth
-- **Icons**: Lucide React
-- **Notifications**: Sonner
+**Frontend:**
+- Next.js 16 (App Router, Turbopack)
+- React 19
+- Tailwind CSS
+- shadcn/ui (Radix UI components)
+- Recharts for data visualization
 
-## Getting Started
+**Backend:**
+- Express.js
+- PostgreSQL
+- JWT Authentication
+- bcrypt for password hashing
+- Role-based access control
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or yarn
+- Node.js 18+
+- PostgreSQL
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
 ```bash
 git clone https://github.com/niloydiu/inventory-management-system.git
 cd inventory-management-system
 ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 ```bash
 npm install
 ```
 
-3. Create a `.env.local` file in the root directory:
-```env
-JWT_SECRET=your-secret-key-here
+3. **Set up PostgreSQL database:**
+```bash
+# Create database
+createdb inventory_db
+
+# Run schema
+psql -d inventory_db -f server/config/db-schema.sql
 ```
 
-4. Run the development server:
+4. **Configure environment variables:**
+
+Create `.env` file:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+DATABASE_URL=postgresql://localhost:5432/inventory_db
+JWT_SECRET=your-secret-key-here
+NODE_ENV=development
+```
+
+5. **Start the development server:**
 ```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. **Open your browser:**
+```
+http://localhost:3000
+```
+
+### Default Login Credentials
+
+```
+Username: admin
+Password: admin123
+Email: admin@inventory.com
+```
+
+## 📖 Documentation
+
+- **[QUICKSTART.md](./QUICKSTART.md)** - Quick start guide
+- **[BACKEND_SETUP.md](./BACKEND_SETUP.md)** - Detailed backend setup
+- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - API reference
+- **[API_ARCHITECTURE.md](./API_ARCHITECTURE.md)** - Architecture overview
 
 ## Project Structure
 
