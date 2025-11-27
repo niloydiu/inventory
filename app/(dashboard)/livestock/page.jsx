@@ -35,7 +35,11 @@ export default function LivestockPage() {
     
     try {
       const data = await livestockApi.getAll(token)
-      setLivestock(data)
+      // Normalize response to always be an array
+      const list = Array.isArray(data) ? data : (data && data.data ? data.data : []);
+      // Ensure each item has an `id` property for client-side usage
+      const normalized = list.map((a) => ({ ...a, id: a.id || a._id }));
+      setLivestock(normalized)
     } catch (error) {
       toast.error("Failed to load livestock")
     } finally {
@@ -60,20 +64,21 @@ export default function LivestockPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Livestock</h2>
-        {canEdit && (
-          <Button asChild>
-            <Link href="/livestock/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Livestock
-            </Link>
-          </Button>
-        )}
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold tracking-tight">Livestock</h2>
+          {canEdit && (
+            <Button asChild>
+              <Link href="/livestock/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Livestock
+              </Link>
+            </Button>
+          )}
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {livestock?.map((animal) => (
           <Card key={animal.id}>
             <CardHeader>
@@ -139,6 +144,7 @@ export default function LivestockPage() {
             No livestock found
           </div>
         )}
+        </div>
       </div>
     </div>
   )

@@ -53,7 +53,13 @@ export function Header() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={logout}>
+          <DropdownMenuItem onClick={async () => {
+            try {
+              await logout()
+            } catch (error) {
+              console.error('Logout error:', error)
+            }
+          }}>
             Log out
           </DropdownMenuItem>
         </DropdownMenuContent>

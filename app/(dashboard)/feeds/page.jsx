@@ -57,22 +57,23 @@ export default function FeedsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Feeds</h2>
-        {canEdit && (
-          <Button asChild>
-            <Link href="/feeds/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Feed
-            </Link>
-          </Button>
-        )}
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold tracking-tight">Feeds</h2>
+          {canEdit && (
+            <Button asChild>
+              <Link href="/feeds/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Feed
+              </Link>
+            </Button>
+          )}
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {feeds?.map((feed) => (
-          <Card key={feed.id} className={isExpired(feed.expiry_date) ? "border-red-300" : ""}>
+          <Card key={feed._id} className={isExpired(feed.expiry_date) ? "border-red-300" : ""}>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
@@ -123,7 +124,7 @@ export default function FeedsPage() {
               {canEdit && (
                 <div className="flex gap-2 pt-4">
                   <Button variant="outline" size="sm" className="flex-1" asChild>
-                    <Link href={`/feeds/${feed.id}/edit`}>
+                    <Link href={`/feeds/${feed._id}/edit`}>
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </Link>
@@ -131,7 +132,7 @@ export default function FeedsPage() {
                   <Button 
                     variant="destructive" 
                     size="sm" 
-                    onClick={() => handleDelete(feed.id)}
+                    onClick={() => handleDelete(feed._id)}
                   >
                     <Trash className="h-4 w-4" />
                   </Button>
@@ -146,6 +147,7 @@ export default function FeedsPage() {
             No feeds found
           </div>
         )}
+        </div>
       </div>
     </div>
   )

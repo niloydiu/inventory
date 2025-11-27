@@ -13,7 +13,7 @@ export function RecentItems({ items }) {
       <CardContent>
         <div className="space-y-8">
           {items?.map((item) => (
-            <div key={item.id} className="flex items-center">
+            <div key={item._id ?? item.id} className="flex items-center">
               <Avatar className="h-9 w-9">
                 <AvatarFallback>{item.name.substring(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
