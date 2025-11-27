@@ -1,52 +1,70 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
-import { assignmentsApi, itemsApi, usersApi } from "@/lib/api"
-import { AssignmentForm } from "@/components/assignments/assignment-form"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "sonner"
-import { ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { assignmentsApi, itemsApi, usersApi } from "@/lib/api";
+import { AssignmentForm } from "@/components/assignments/assignment-form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function NewAssignmentPage() {
-  const router = useRouter()
-  const { token } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [items, setItems] = useState([])
-  const [users, setUsers] = useState([])
+  const router = useRouter();
+  const { token } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [items, setItems] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
-      if (!token) return
-      
+      if (!token) return;
+
       try {
         const [itemsData, usersData] = await Promise.all([
           itemsApi.getAll(token),
-          usersApi.getAll(token)
-        ])
-        setItems(itemsData)
-        setUsers(usersData)
+          usersApi.getAll(token),
+        ]);
+
+        // Ensure we have arrays
+        const itemsList = Array.isArray(itemsData)
+          ? itemsData
+          : itemsData?.items || itemsData?.data || [];
+        const usersList = Array.isArray(usersData)
+          ? usersData
+          : usersData?.data || [];
+
+        setItems(itemsList);
+        setUsers(usersList);
       } catch (error) {
-        toast.error("Failed to load data")
+        console.error("Failed to load data:", error);
+        toast.error("Failed to load data");
+        setItems([]);
+        setUsers([]);
       }
     }
 
-    fetchData()
-  }, [token])
+    fetchData();
+  }, [token]);
 
   async function onSubmit(data) {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await assignmentsApi.create(data, token)
-      toast.success("Assignment created successfully")
-      router.push("/assignments")
+      await assignmentsApi.create(data, token);
+      toast.success("Assignment created successfully");
+      router.push("/assignments");
     } catch (error) {
-      toast.error(error.message || "Failed to create assignment")
+      toast.error(error.message || "Failed to create assignment");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -61,24 +79,22 @@ export default function NewAssignmentPage() {
           </Button>
           <h2 className="text-3xl font-bold tracking-tight">New Assignment</h2>
         </div>
-        
+
         <Card>
-        <CardHeader>
-          <CardTitle>Assignment Details</CardTitle>
-          <CardDescription>
-            Assign an item to an employee
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AssignmentForm 
-            onSubmit={onSubmit} 
-            isLoading={isLoading}
-            items={items}
-            users={users}
-          />
-        </CardContent>
-      </Card>
+          <CardHeader>
+            <CardTitle>Assignment Details</CardTitle>
+            <CardDescription>Assign an item to an employee</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AssignmentForm
+              onSubmit={onSubmit}
+              isLoading={isLoading}
+              items={items}
+              users={users}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
-  )
+  );
 }

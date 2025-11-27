@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 12px;
+      }
+      .success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>API Login Test</h1>
+    <p>This page tests the login API endpoint directly.</p>
+
+    <div
+      style="
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+      "
+    >
+      <strong>⚠️ Cache Clearing:</strong>
+      <button
+        onclick="clearAllCache()"
+        style="
+          margin-left: 10px;
+          padding: 5px 10px;
+          background: #ff6b6b;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        Clear All Cache & Reload
+      </button>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" value="admin" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" value="admin123" required />
+      </div>
+      <button type="submit">Test Login</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+      function clearAllCache() {
+        // Clear localStorage
+        localStorage.clear();
+
+        // Clear sessionStorage
+        sessionStorage.clear();
+
+        // Clear cookies
+        document.cookie.split(";").forEach(function (c) {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date().toUTCString() + ";path=/"
+            );
+        });
+
+        // Clear service worker cache if available
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .getRegistrations()
+            .then(function (registrations) {
+              for (let registration of registrations) {
+                registration.unregister();
+              }
+            });
+        }
+
+        // Clear cache storage
+        if ("caches" in window) {
+          caches.keys().then(function (names) {
+            for (let name of names) caches.delete(name);
+          });
+        }
+
+        alert("All caches cleared! Page will reload...");
+        setTimeout(() => window.location.reload(true), 500);
+      }
+
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+          const resultDiv = document.getElementById("result");
+
+          resultDiv.textContent = "Testing login...";
+          resultDiv.className = "";
+
+          try {
+            // Test login
+            const loginResponse = await fetch("/api/v1/auth/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ username, password }),
+            });
+
+            const loginData = await loginResponse.json();
+
+            if (!loginResponse.ok) {
+              throw new Error(JSON.stringify(loginData, null, 2));
+            }
+
+            // Test /auth/me endpoint
+            const token = loginData.data.access_token;
+            const meResponse = await fetch("/api/v1/auth/me", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            const meData = await meResponse.json();
+
+            // Display results
+            const result = {
+              login: loginData,
+              me: meData,
+              token_length: token.length,
+              storage_test: {
+                localStorage: typeof localStorage !== "undefined",
+                can_set: true,
+              },
+            };
+
+            // Try setting localStorage
+            try {
+              localStorage.setItem("test_token", token);
+              localStorage.setItem("test_user", JSON.stringify(meData.data));
+              result.storage_test.can_set = true;
+              result.storage_test.retrieved =
+                localStorage.getItem("test_token") === token;
+            } catch (err) {
+              result.storage_test.error = err.message;
+            }
+
+            resultDiv.textContent =
+              "SUCCESS!\n\n" + JSON.stringify(result, null, 2);
+            resultDiv.className = "success";
+          } catch (error) {
+            resultDiv.textContent = "ERROR:\n\n" + error.message;
+            resultDiv.className = "error";
+          }
+        });
+    </script>
+  </body>
+</html>

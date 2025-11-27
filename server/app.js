@@ -1,10 +1,10 @@
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const connectDB = require('./config/database');
-const validateEnv = require('./config/validateEnv');
+const express = require("express");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const connectDB = require("./config/database");
+const validateEnv = require("./config/validateEnv");
 
 // Validate environment variables
 validateEnv();
@@ -15,23 +15,28 @@ const app = express();
 connectDB();
 
 // Security middleware - Helmet (must be first)
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false, // For Next.js compatibility
-}));
+    crossOriginEmbedderPolicy: false, // For Next.js compatibility
+  })
+);
 
 // Rate limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 requests per window
-  message: { success: false, message: 'Too many login attempts, please try again later' },
+  message: {
+    success: false,
+    message: "Too many login attempts, please try again later",
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -39,57 +44,67 @@ const authLimiter = rateLimit({
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // 100 requests per window
-  message: { success: false, message: 'Too many requests, please slow down' },
+  message: { success: false, message: "Too many requests, please slow down" },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 // CORS configuration with multiple origins support
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
-  : ['http://localhost:3000'];
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((origin) => origin.trim())
+  : ["http://localhost:3000"];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('Not allowed by CORS'), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400, // 24 hours
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) === -1) {
+        return callback(new Error("Not allowed by CORS"), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400, // 24 hours
+  })
+);
 
 // Body parsing with size limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 // Manual NoSQL injection protection middleware
 app.use((req, res, next) => {
   const sanitize = (obj) => {
-    if (obj && typeof obj === 'object') {
-      Object.keys(obj).forEach(key => {
-        if (key.startsWith('$') || key.includes('.')) {
+    if (obj && typeof obj === "object") {
+      Object.keys(obj).forEach((key) => {
+        if (key.startsWith("$") || key.includes(".")) {
           delete obj[key];
           console.warn(`[Security] Removed potentially malicious key: ${key}`);
-        } else if (typeof obj[key] === 'object') {
+        } else if (typeof obj[key] === "object") {
           sanitize(obj[key]);
         }
       });
     }
     return obj;
   };
-  
+
   if (req.body) sanitize(req.body);
   if (req.query) sanitize(req.query);
   if (req.params) sanitize(req.params);
-  
+
+  next();
+});
+
+// Disable caching for API responses
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
   next();
 });
 
@@ -100,21 +115,23 @@ app.use((req, res, next) => {
 });
 
 // Routes
-const authRoutes = require('./routes/auth.routes');
-const itemsRoutes = require('./routes/items.routes');
-const assignmentsRoutes = require('./routes/assignments.routes');
-const livestockRoutes = require('./routes/livestock.routes');
-const feedsRoutes = require('./routes/feeds.routes');
-const usersRoutes = require('./routes/users.routes');
-const dashboardRoutes = require('./routes/dashboard.routes');
-const auditRoutes = require('./routes/audit.routes');
-const locationsRoutes = require('./routes/locations.routes');
-const maintenanceRoutes = require('./routes/maintenance.routes');
-const reservationsRoutes = require('./routes/reservations.routes');
-const approvalsRoutes = require('./routes/approvals.routes');
+const authRoutes = require("./routes/auth.routes");
+const itemsRoutes = require("./routes/items.routes");
+const assignmentsRoutes = require("./routes/assignments.routes");
+const livestockRoutes = require("./routes/livestock.routes");
+const feedsRoutes = require("./routes/feeds.routes");
+const usersRoutes = require("./routes/users.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
+const auditRoutes = require("./routes/audit.routes");
+const locationsRoutes = require("./routes/locations.routes");
+const maintenanceRoutes = require("./routes/maintenance.routes");
+const reservationsRoutes = require("./routes/reservations.routes");
+const approvalsRoutes = require("./routes/approvals.routes");
+const reportsRoutes = require("./routes/reports.routes");
+const exportRoutes = require("./routes/export.routes");
 
 // API routes
-const API_PREFIX = '/api/v1';
+const API_PREFIX = "/api/v1";
 
 // Apply rate limiting to auth routes
 app.use(`${API_PREFIX}/auth/login`, authLimiter);
@@ -130,18 +147,20 @@ app.use(`${API_PREFIX}/livestock`, livestockRoutes);
 app.use(`${API_PREFIX}/feeds`, feedsRoutes);
 app.use(`${API_PREFIX}/users`, usersRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
-app.use(`${API_PREFIX}/audit-logs`, auditRoutes);
+app.use(`${API_PREFIX}/audit`, auditRoutes);
 app.use(`${API_PREFIX}/locations`, locationsRoutes);
 app.use(`${API_PREFIX}/maintenance`, maintenanceRoutes);
 app.use(`${API_PREFIX}/reservations`, reservationsRoutes);
 app.use(`${API_PREFIX}/approvals`, approvalsRoutes);
+app.use(`${API_PREFIX}/reports`, reportsRoutes);
+app.use(`${API_PREFIX}/export`, exportRoutes);
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
+app.get("/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -149,17 +168,17 @@ app.get('/health', (req, res) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Route not found'
+    message: "Route not found",
   });
 });
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error("Error:", err);
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    message: err.message || "Internal server error",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });
 
