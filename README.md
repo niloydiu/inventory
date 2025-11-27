@@ -91,6 +91,97 @@ Password: admin123
 Email: admin@inventory.com
 ```
 
+## How to Run (Local Development)
+
+Follow these short steps to run the full application (frontend + backend) locally.
+
+Prerequisites
+- Node.js 18+
+- PostgreSQL (running locally)
+
+1) Install dependencies
+
+```bash
+npm install
+```
+
+2) Create the database and run schema
+
+```bash
+# create database
+createdb inventory_db
+
+# apply schema
+psql -d inventory_db -f server/config/db-schema.sql
+```
+
+3) Create or update `.env` in project root (example values)
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+DATABASE_URL=postgresql://<db_user>@localhost:5432/inventory_db
+JWT_SECRET=your-super-secret-jwt-key
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+```
+
+4) Start the integrated server (Next.js + Express API)
+
+```bash
+npm run dev
+```
+
+Notes and alternative modes
+- Start only Next.js frontend:
+
+```bash
+npm run dev:next
+```
+
+- Start only API server (standalone):
+
+```bash
+npm run dev:api
+```
+
+Production build
+
+```bash
+npm run build
+npm start
+```
+
+API quick tests (curl)
+
+```bash
+# Health
+curl http://localhost:3000/health
+
+# Login (get token)
+curl -X POST http://localhost:3000/api/v1/auth/login \
+	-H "Content-Type: application/json" \
+	-d '{"username":"admin","password":"admin123"}'
+
+# Use returned token for protected endpoints:
+# curl -H "Authorization: Bearer <TOKEN>" http://localhost:3000/api/v1/items
+```
+
+Troubleshooting
+- If the server fails to start due to a DB connection error, confirm PostgreSQL is running and `DATABASE_URL` in `.env` is correct.
+- If `next dev` reports a lock error, ensure no other Next.js dev process is running and remove `.next` then restart.
+- Logs for the integrated server appear in the terminal where you run `npm run dev`.
+
+Important files
+- `server/` — Express backend (routes, controllers, middleware)
+- `server/config/db-schema.sql` — DB schema and default admin
+- `server.js` — integration entry (Next.js + Express)
+- `server/index.js` — standalone API server
+
+Where to go next
+- Open `http://localhost:3000`, login with the admin account, and explore the dashboard and inventory pages.
+
+If you want I can also add a one-line convenience script or update package.json scripts further.
+
 ## 📖 Documentation
 
 - **[QUICKSTART.md](./QUICKSTART.md)** - Quick start guide
