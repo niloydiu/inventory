@@ -10,6 +10,19 @@ const nextConfig = {
       },
     ],
   },
+  // API routes will be handled by Vercel serverless functions
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: '/api/:path*',
+      },
+      {
+        source: '/health',
+        destination: '/api/health',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
