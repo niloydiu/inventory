@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const pool = require('../config/database');
+const { User } = require('../models');
 const { JWT_SECRET } = require('../middleware/auth');
 
 // Register new user
@@ -17,12 +17,11 @@ exports.register = async (req, res) => {
     }
 
     // Check if user exists
-    const existingUser = await pool.query(
-      'SELECT id FROM users WHERE username = $1 OR email = $2',
-      [username, email]
-    );
+    const existingUser = await User.findOne({
+      $or: [{ username }, { email }]
+    });
 
-    if (existingUser.rows.length > 0) {
+    if (existingUser) {
       return res.status(400).json({
         success: false,
         message: 'Username or email already exists'
@@ -33,16 +32,20 @@ exports.register = async (req, res) => {
     const password_hash = await bcrypt.hash(password, 10);
 
     // Create user
-    const result = await pool.query(
-      `INSERT INTO users (username, email, password_hash, full_name, role)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, username, email, full_name, role, created_at`,
-      [username, email, password_hash, full_name, role]
-    );
+    const user = await User.create({
+      username,
+      email,
+      password_hash,
+      full_name,
+      role
+    });
+
+    const userData = user.toObject();
+    delete userData.password_hash;
 
     res.status(201).json({
       success: true,
-      data: result.rows[0]
+      data: userData
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -66,19 +69,14 @@ exports.login = async (req, res) => {
     }
 
     // Get user
-    const result = await pool.query(
-      'SELECT * FROM users WHERE username = $1',
-      [username]
-    );
+    const user = await User.findOne({ username });
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
-
-    const user = result.rows[0];
 
     // Verify password
     const isValid = await bcrypt.compare(password, user.password_hash);
@@ -93,7 +91,7 @@ exports.login = async (req, res) => {
     // Generate token
     const token = jwt.sign(
       {
-        user_id: user.id,
+        user_id: user._id.toString(),
         username: user.username,
         role: user.role
       },
@@ -102,13 +100,14 @@ exports.login = async (req, res) => {
     );
 
     // Remove password from response
-    delete user.password_hash;
+    const userData = user.toObject();
+    delete userData.password_hash;
 
     res.json({
       success: true,
       data: {
         access_token: token,
-        user
+        user: userData
       }
     });
   } catch (error) {
@@ -123,12 +122,9 @@ exports.login = async (req, res) => {
 // Get current user
 exports.getCurrentUser = async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, username, email, full_name, role, created_at FROM users WHERE id = $1',
-      [req.user.user_id]
-    );
+    const user = await User.findById(req.user.user_id).select('-password_hash');
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
@@ -137,7 +133,7 @@ exports.getCurrentUser = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: user
     });
   } catch (error) {
     console.error('Get user error:', error);
@@ -151,23 +147,18 @@ exports.getCurrentUser = async (req, res) => {
 // Refresh token
 exports.refreshToken = async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, username, role FROM users WHERE id = $1',
-      [req.user.user_id]
-    );
+    const user = await User.findById(req.user.user_id).select('_id username role');
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
-    const user = result.rows[0];
-
     const token = jwt.sign(
       {
-        user_id: user.id,
+        user_id: user._id.toString(),
         username: user.username,
         role: user.role
       },

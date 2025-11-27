@@ -1,15 +1,15 @@
-const pool = require('../config/database');
+const { User } = require('../models');
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, username, email, full_name, role, created_at FROM users ORDER BY created_at DESC'
-    );
+    const users = await User.find()
+      .select('-password_hash')
+      .sort({ created_at: -1 });
 
     res.json({
       success: true,
-      data: result.rows
+      data: users
     });
   } catch (error) {
     console.error('Get users error:', error);
@@ -25,12 +25,9 @@ exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
-      'SELECT id, username, email, full_name, role, created_at FROM users WHERE id = $1',
-      [id]
-    );
+    const user = await User.findById(id).select('-password_hash');
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
@@ -39,7 +36,7 @@ exports.getUserById = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: user
     });
   } catch (error) {
     console.error('Get user error:', error);
@@ -54,21 +51,18 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, full_name, role } = req.body;
+    const updateData = req.body;
 
-    const result = await pool.query(
-      `UPDATE users 
-       SET username = COALESCE($1, username),
-           email = COALESCE($2, email),
-           full_name = COALESCE($3, full_name),
-           role = COALESCE($4, role),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $5
-       RETURNING id, username, email, full_name, role, created_at`,
-      [username, email, full_name, role, id]
-    );
+    // Don't allow updating password through this endpoint
+    delete updateData.password_hash;
 
-    if (result.rows.length === 0) {
+    const user = await User.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password_hash');
+
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
@@ -77,7 +71,7 @@ exports.updateUser = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: user
     });
   } catch (error) {
     console.error('Update user error:', error);
@@ -94,19 +88,16 @@ exports.deleteUser = async (req, res) => {
     const { id } = req.params;
 
     // Prevent deleting self
-    if (parseInt(id) === req.user.user_id) {
+    if (id === req.user.user_id) {
       return res.status(400).json({
         success: false,
         message: 'Cannot delete your own account'
       });
     }
 
-    const result = await pool.query(
-      'DELETE FROM users WHERE id = $1 RETURNING id, username, email',
-      [id]
-    );
+    const user = await User.findByIdAndDelete(id).select('-password_hash');
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
@@ -115,7 +106,7 @@ exports.deleteUser = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: user
     });
   } catch (error) {
     console.error('Delete user error:', error);

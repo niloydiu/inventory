@@ -29,7 +29,8 @@ A modern, full-featured inventory management system built with Next.js 16 and Ex
 
 **Backend:**
 - Express.js
-- PostgreSQL
+- MongoDB
+- Mongoose ODM
 - JWT Authentication
 - bcrypt for password hashing
 - Role-based access control
@@ -39,7 +40,7 @@ A modern, full-featured inventory management system built with Next.js 16 and Ex
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL
+- MongoDB 7.0+
 
 ### Installation
 
@@ -54,26 +55,41 @@ cd inventory-management-system
 npm install
 ```
 
-3. **Set up PostgreSQL database:**
+3. **Set up MongoDB:**
 ```bash
-# Create database
-createdb inventory_db
+# Install MongoDB (macOS)
+brew tap mongodb/brew
+brew install mongodb-community@7.0
 
-# Run schema
-psql -d inventory_db -f server/config/db-schema.sql
+# Start MongoDB
+brew services start mongodb-community@7.0
+
+# Verify MongoDB is running
+mongosh --eval "db.runCommand({ ping: 1 })"
 ```
+
+For other platforms, see [MONGODB_SETUP.md](MONGODB_SETUP.md)
 
 4. **Configure environment variables:**
 
 Create `.env` file:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
-DATABASE_URL=postgresql://localhost:5432/inventory_db
+MONGODB_URI=mongodb://localhost:27017/inventory_db
 JWT_SECRET=your-secret-key-here
 NODE_ENV=development
 ```
 
-5. **Start the development server:**
+5. **Seed the database:**
+```bash
+npm run db:seed
+```
+
+This creates the default admin user:
+- **Username:** admin
+- **Password:** admin123
+
+6. **Start the development server:**
 ```bash
 npm run dev
 ```

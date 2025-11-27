@@ -1,4 +1,4 @@
-const pool = require('../config/database');
+const { Item, Assignment, Livestock, Feed, User } = require('../models');
 
 // Get dashboard stats
 exports.getStats = async (req, res) => {
@@ -6,32 +6,46 @@ exports.getStats = async (req, res) => {
     const stats = {};
 
     // Total items
-    const itemsResult = await pool.query('SELECT COUNT(*) as count FROM items');
-    stats.total_items = parseInt(itemsResult.rows[0].count);
+    stats.total_items = await Item.countDocuments();
 
     // Low stock items
-    const lowStockResult = await pool.query('SELECT COUNT(*) as count FROM items WHERE quantity <= low_stock_threshold');
-    stats.low_stock = parseInt(lowStockResult.rows[0].count);
+    stats.low_stock = await Item.countDocuments({
+      $expr: { $lte: ['$quantity', '$low_stock_threshold'] }
+    });
 
     // Active assignments
-    const assignmentsResult = await pool.query("SELECT COUNT(*) as count FROM assignments WHERE status = 'active'");
-    stats.active_assignments = parseInt(assignmentsResult.rows[0].count);
+    stats.active_assignments = await Assignment.countDocuments({ status: 'active' });
 
     // Total users
-    const usersResult = await pool.query('SELECT COUNT(*) as count FROM users');
-    stats.total_users = parseInt(usersResult.rows[0].count);
+    stats.total_users = await User.countDocuments();
 
     // Items by category
-    const categoriesResult = await pool.query(
-      'SELECT category, COUNT(*) as count FROM items GROUP BY category ORDER BY count DESC'
-    );
-    stats.items_by_category = categoriesResult.rows;
+    const categoriesResult = await Item.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          category: '$_id',
+          count: 1
+        }
+      },
+      {
+        $sort: { count: -1 }
+      }
+    ]);
+    stats.items_by_category = categoriesResult;
 
     // Recent items
-    const recentItemsResult = await pool.query(
-      'SELECT * FROM items ORDER BY created_at DESC LIMIT 5'
-    );
-    stats.recent_items = recentItemsResult.rows;
+    const recentItemsResult = await Item.find()
+      .sort({ created_at: -1 })
+      .limit(5)
+      .lean();
+    stats.recent_items = recentItemsResult;
 
     res.json({
       success: true,

@@ -1,39 +1,32 @@
-const pool = require('../config/database');
+const { Item } = require('../models');
 
 // Get all items
 exports.getAllItems = async (req, res) => {
   try {
     const { category, status, search } = req.query;
     
-    let query = 'SELECT * FROM items WHERE 1=1';
-    const params = [];
-    let paramIndex = 1;
+    let filter = {};
 
     if (category) {
-      query += ` AND category = $${paramIndex}`;
-      params.push(category);
-      paramIndex++;
+      filter.category = category;
     }
 
     if (status) {
-      query += ` AND status = $${paramIndex}`;
-      params.push(status);
-      paramIndex++;
+      filter.status = status;
     }
 
     if (search) {
-      query += ` AND (name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
-      params.push(`%${search}%`);
-      paramIndex++;
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
     }
 
-    query += ' ORDER BY created_at DESC';
-
-    const result = await pool.query(query, params);
+    const items = await Item.find(filter).sort({ created_at: -1 });
 
     res.json({
       success: true,
-      data: result.rows
+      data: items
     });
   } catch (error) {
     console.error('Get items error:', error);
@@ -49,9 +42,9 @@ exports.getItemById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query('SELECT * FROM items WHERE id = $1', [id]);
+    const item = await Item.findById(id);
 
-    if (result.rows.length === 0) {
+    if (!item) {
       return res.status(404).json({
         success: false,
         message: 'Item not found'
@@ -60,7 +53,7 @@ exports.getItemById = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: item
     });
   } catch (error) {
     console.error('Get item error:', error);
@@ -74,25 +67,26 @@ exports.getItemById = async (req, res) => {
 // Create item
 exports.createItem = async (req, res) => {
   try {
-    const { name, description, category, quantity, low_stock_threshold, location, serial_number, status } = req.body;
+    const itemData = req.body;
 
-    if (!name) {
+    if (!itemData.name) {
       return res.status(400).json({
         success: false,
         message: 'Item name is required'
       });
     }
 
-    const result = await pool.query(
-      `INSERT INTO items (name, description, category, quantity, low_stock_threshold, location, serial_number, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING *`,
-      [name, description, category, quantity || 0, low_stock_threshold || 10, location, serial_number, status || 'available']
-    );
+    // Set defaults
+    if (!itemData.quantity) itemData.quantity = 0;
+    if (!itemData.available_quantity) itemData.available_quantity = itemData.quantity;
+    if (!itemData.low_stock_threshold) itemData.low_stock_threshold = 10;
+    if (!itemData.status) itemData.status = 'active';
+
+    const item = await Item.create(itemData);
 
     res.status(201).json({
       success: true,
-      data: result.rows[0]
+      data: item
     });
   } catch (error) {
     console.error('Create item error:', error);
@@ -107,25 +101,15 @@ exports.createItem = async (req, res) => {
 exports.updateItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, category, quantity, low_stock_threshold, location, serial_number, status } = req.body;
+    const updateData = req.body;
 
-    const result = await pool.query(
-      `UPDATE items 
-       SET name = COALESCE($1, name),
-           description = COALESCE($2, description),
-           category = COALESCE($3, category),
-           quantity = COALESCE($4, quantity),
-           low_stock_threshold = COALESCE($5, low_stock_threshold),
-           location = COALESCE($6, location),
-           serial_number = COALESCE($7, serial_number),
-           status = COALESCE($8, status),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9
-       RETURNING *`,
-      [name, description, category, quantity, low_stock_threshold, location, serial_number, status, id]
+    const item = await Item.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
     );
 
-    if (result.rows.length === 0) {
+    if (!item) {
       return res.status(404).json({
         success: false,
         message: 'Item not found'
@@ -134,7 +118,7 @@ exports.updateItem = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: item
     });
   } catch (error) {
     console.error('Update item error:', error);
@@ -150,9 +134,9 @@ exports.deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query('DELETE FROM items WHERE id = $1 RETURNING *', [id]);
+    const item = await Item.findByIdAndDelete(id);
 
-    if (result.rows.length === 0) {
+    if (!item) {
       return res.status(404).json({
         success: false,
         message: 'Item not found'
@@ -161,7 +145,7 @@ exports.deleteItem = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: item
     });
   } catch (error) {
     console.error('Delete item error:', error);
@@ -175,11 +159,11 @@ exports.deleteItem = async (req, res) => {
 // Get categories
 exports.getCategories = async (req, res) => {
   try {
-    const result = await pool.query('SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category');
+    const categories = await Item.distinct('category');
 
     res.json({
       success: true,
-      data: result.rows.map(row => row.category)
+      data: categories.filter(c => c).sort()
     });
   } catch (error) {
     console.error('Get categories error:', error);
@@ -193,13 +177,13 @@ exports.getCategories = async (req, res) => {
 // Get low stock items
 exports.getLowStock = async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM items WHERE quantity <= low_stock_threshold ORDER BY quantity ASC'
-    );
+    const items = await Item.find({
+      $expr: { $lte: ['$quantity', '$low_stock_threshold'] }
+    }).sort({ quantity: 1 });
 
     res.json({
       success: true,
-      data: result.rows
+      data: items
     });
   } catch (error) {
     console.error('Get low stock error:', error);
@@ -222,33 +206,21 @@ exports.bulkCreate = async (req, res) => {
       });
     }
 
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
+    // Set defaults for each item
+    const itemsWithDefaults = items.map(item => ({
+      ...item,
+      quantity: item.quantity || 0,
+      available_quantity: item.available_quantity || item.quantity || 0,
+      low_stock_threshold: item.low_stock_threshold || 10,
+      status: item.status || 'active'
+    }));
 
-      const createdItems = [];
-      for (const item of items) {
-        const result = await client.query(
-          `INSERT INTO items (name, description, category, quantity, low_stock_threshold, location, serial_number, status)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-           RETURNING *`,
-          [item.name, item.description, item.category, item.quantity || 0, item.low_stock_threshold || 10, item.location, item.serial_number, item.status || 'available']
-        );
-        createdItems.push(result.rows[0]);
-      }
+    const createdItems = await Item.insertMany(itemsWithDefaults);
 
-      await client.query('COMMIT');
-
-      res.status(201).json({
-        success: true,
-        data: createdItems
-      });
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    res.status(201).json({
+      success: true,
+      data: createdItems
+    });
   } catch (error) {
     console.error('Bulk create error:', error);
     res.status(500).json({
