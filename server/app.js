@@ -1,21 +1,97 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/database');
+const validateEnv = require('./config/validateEnv');
+
+// Validate environment variables
+validateEnv();
 
 const app = express();
 
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+// Security middleware - Helmet (must be first)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // For Next.js compatibility
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Rate limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per window
+  message: { success: false, message: 'Too many login attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: { success: false, message: 'Too many requests, please slow down' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// CORS configuration with multiple origins support
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
+  : ['http://localhost:3000'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400, // 24 hours
+}));
+
+// Body parsing with size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// Manual NoSQL injection protection middleware
+app.use((req, res, next) => {
+  const sanitize = (obj) => {
+    if (obj && typeof obj === 'object') {
+      Object.keys(obj).forEach(key => {
+        if (key.startsWith('$') || key.includes('.')) {
+          delete obj[key];
+          console.warn(`[Security] Removed potentially malicious key: ${key}`);
+        } else if (typeof obj[key] === 'object') {
+          sanitize(obj[key]);
+        }
+      });
+    }
+    return obj;
+  };
+  
+  if (req.body) sanitize(req.body);
+  if (req.query) sanitize(req.query);
+  if (req.params) sanitize(req.params);
+  
+  next();
+});
 
 // Request logging
 app.use((req, res, next) => {
@@ -39,6 +115,13 @@ const approvalsRoutes = require('./routes/approvals.routes');
 
 // API routes
 const API_PREFIX = '/api/v1';
+
+// Apply rate limiting to auth routes
+app.use(`${API_PREFIX}/auth/login`, authLimiter);
+app.use(`${API_PREFIX}/auth/register`, authLimiter);
+
+// Apply general rate limiting to all API routes
+app.use(API_PREFIX, apiLimiter);
 
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/items`, itemsRoutes);

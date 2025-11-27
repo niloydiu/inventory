@@ -1,0 +1,11 @@
+# Vercel
+.vercel
+
+# Local environment
+.env.local
+.env.production.local
+.env.development.local
+
+# MongoDB
+dump/
+*.log

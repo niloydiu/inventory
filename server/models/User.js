@@ -5,19 +5,18 @@ const userSchema = new mongoose.Schema(
     username: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     email: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       lowercase: true,
     },
     password_hash: {
       type: String,
       required: true,
+      select: false, // Never include by default
     },
     role: {
       type: String,
@@ -35,7 +34,25 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+    toJSON: {
+      transform: function(doc, ret) {
+        delete ret.password_hash;
+        return ret;
+      }
+    },
+    toObject: {
+      transform: function(doc, ret) {
+        delete ret.password_hash;
+        return ret;
+      }
+    }
   }
 );
+
+// Indexes for performance
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ username: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ is_active: 1 });
 
 module.exports = mongoose.model("User", userSchema);

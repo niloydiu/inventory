@@ -48,10 +48,14 @@ const auditLogSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Indexes for performance and TTL
 auditLogSchema.index({ user_id: 1 });
 auditLogSchema.index({ entity_type: 1 });
+auditLogSchema.index({ entity_type: 1, entity_id: 1 });
 auditLogSchema.index({ created_at: -1 });
 auditLogSchema.index({ action: 1 });
+auditLogSchema.index({ user_id: 1, created_at: -1 });
+// Auto-delete logs older than 90 days (optional - uncomment if needed)
+// auditLogSchema.index({ created_at: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
 
 module.exports = mongoose.model("AuditLog", auditLogSchema);

@@ -59,10 +59,13 @@ const assignmentSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Indexes for performance
 assignmentSchema.index({ item_id: 1 });
 assignmentSchema.index({ assigned_to_user_id: 1 });
+assignmentSchema.index({ assigned_by_user_id: 1 });
 assignmentSchema.index({ status: 1 });
 assignmentSchema.index({ assignment_date: -1 });
+assignmentSchema.index({ assigned_to_user_id: 1, status: 1 });
+assignmentSchema.index({ assigned_to_user_id: 1, assignment_date: -1 });
 
 module.exports = mongoose.model("Assignment", assignmentSchema);

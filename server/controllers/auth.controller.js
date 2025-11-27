@@ -68,8 +68,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Get user
-    const user = await User.findOne({ username });
+    // Get user with password hash
+    const user = await User.findOne({ username }).select('+password_hash');
 
     if (!user) {
       return res.status(401).json({
@@ -99,7 +99,15 @@ exports.login = async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Remove password from response
+    // Set httpOnly cookie for security
+    res.cookie('inventory_auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    // Remove password from user object
     const userData = user.toObject();
     delete userData.password_hash;
 
