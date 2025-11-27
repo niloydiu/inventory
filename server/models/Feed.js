@@ -80,7 +80,7 @@ feedSchema.index({ status: 1 });
 feedSchema.index({ expiry_date: 1 });
 
 // Update status based on quantity and expiry
-feedSchema.pre("save", function (next) {
+feedSchema.pre("save", function () {
   if (this.quantity === 0) {
     this.status = "out_of_stock";
   } else if (this.quantity <= this.low_stock_threshold) {
@@ -90,7 +90,6 @@ feedSchema.pre("save", function (next) {
   } else {
     this.status = "available";
   }
-  next();
 });
 
 module.exports = mongoose.model("Feed", feedSchema);

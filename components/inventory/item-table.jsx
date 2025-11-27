@@ -44,7 +44,7 @@ export function ItemTable({ items, onDelete, canEdit }) {
         </TableHeader>
         <TableBody>
           {items?.map((item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item._id}>
               <TableCell className="font-medium">{item.name}</TableCell>
               <TableCell>{item.category}</TableCell>
               <TableCell>
@@ -70,14 +70,14 @@ export function ItemTable({ items, onDelete, canEdit }) {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem asChild>
-                      <Link href={`/inventory/${item.id}`}>
+                      <Link href={`/inventory/${item._id}`}>
                         <Eye className="mr-2 h-4 w-4" />
                         View Details
                       </Link>
                     </DropdownMenuItem>
                     {canEdit && (
                       <DropdownMenuItem asChild>
-                        <Link href={`/inventory/${item.id}/edit`}>
+                        <Link href={`/inventory/${item._id}/edit`}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </Link>
@@ -85,7 +85,7 @@ export function ItemTable({ items, onDelete, canEdit }) {
                     )}
                     {canEdit && (
                       <DropdownMenuItem
-                        onClick={() => onDelete(item.id)}
+                        onClick={() => onDelete(item._id)}
                         className="text-red-600"
                       >
                         <Trash className="mr-2 h-4 w-4" />

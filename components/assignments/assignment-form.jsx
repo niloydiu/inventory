@@ -52,7 +52,7 @@ export function AssignmentForm({ defaultValues, onSubmit, isLoading, items = [],
                 </FormControl>
                 <SelectContent>
                   {items.map((item) => (
-                    <SelectItem key={item.id} value={item.id.toString()}>
+                    <SelectItem key={item._id} value={item._id.toString()}>
                       {item.name} ({item.quantity} available)
                     </SelectItem>
                   ))}
@@ -77,7 +77,7 @@ export function AssignmentForm({ defaultValues, onSubmit, isLoading, items = [],
                 </FormControl>
                 <SelectContent>
                   {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
+                    <SelectItem key={user._id} value={user._id.toString()}>
                       {user.username} - {user.email}
                     </SelectItem>
                   ))}

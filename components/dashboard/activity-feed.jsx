@@ -14,7 +14,7 @@ export function ActivityFeed({ activities }) {
         <ScrollArea className="h-[300px]">
           <div className="space-y-4">
             {activities?.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-4 text-sm">
+              <div key={activity._id} className="flex items-start gap-4 text-sm">
                 <div className="grid gap-1">
                   <p className="font-medium">{activity.username} {activity.action}</p>
                   <p className="text-muted-foreground">{activity.description}</p>

@@ -17,7 +17,7 @@ export function LowStockAlert({ items }) {
       <CardContent>
         <div className="space-y-4">
           {items?.map((item) => (
-            <div key={item.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+            <div key={item._id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">{item.name}</p>
                 <p className="text-xs text-muted-foreground">
