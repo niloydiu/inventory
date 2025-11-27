@@ -24,11 +24,18 @@ export function InventoryContent() {
   }, [token])
 
   async function fetchItems() {
-    if (!token) return
-    
+    // Allow fetching even when `token` is not present (httpOnly cookie auth)
     try {
       const data = await apiClient.get(ITEMS_ENDPOINTS.BASE, {}, token)
-      setItems(data)
+
+      // API may return either an array or an object { items, pagination }
+      if (Array.isArray(data)) {
+        setItems(data)
+      } else if (data && Array.isArray(data.items)) {
+        setItems(data.items)
+      } else {
+        setItems([])
+      }
     } catch (error) {
       toast.error("Failed to load items")
     } finally {
