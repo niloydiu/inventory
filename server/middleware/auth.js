@@ -53,4 +53,10 @@ const requireRole = (...allowedRoles) => {
   };
 };
 
-module.exports = { authMiddleware, requireRole, JWT_SECRET };
+module.exports = { 
+  authMiddleware, 
+  requireRole, 
+  authenticate: authMiddleware,
+  authorize: requireRole,
+  JWT_SECRET 
+};

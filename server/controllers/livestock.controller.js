@@ -1,33 +1,25 @@
-const pool = require('../config/database');
+const { Livestock } = require('../models');
 
 // Get all livestock
 exports.getAllLivestock = async (req, res) => {
   try {
     const { species, health_status } = req.query;
     
-    let query = 'SELECT * FROM livestock WHERE 1=1';
-    const params = [];
-    let paramIndex = 1;
+    const filter = {};
 
     if (species) {
-      query += ` AND species = $${paramIndex}`;
-      params.push(species);
-      paramIndex++;
+      filter.species = species;
     }
 
     if (health_status) {
-      query += ` AND health_status = $${paramIndex}`;
-      params.push(health_status);
-      paramIndex++;
+      filter.health_status = health_status;
     }
 
-    query += ' ORDER BY created_at DESC';
-
-    const result = await pool.query(query, params);
+    const livestock = await Livestock.find(filter).sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      data: result.rows
+      data: livestock
     });
   } catch (error) {
     console.error('Get livestock error:', error);
@@ -43,9 +35,9 @@ exports.getLivestockById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query('SELECT * FROM livestock WHERE id = $1', [id]);
+    const livestock = await Livestock.findById(id);
 
-    if (result.rows.length === 0) {
+    if (!livestock) {
       return res.status(404).json({
         success: false,
         message: 'Livestock not found'
@@ -54,7 +46,7 @@ exports.getLivestockById = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: livestock
     });
   } catch (error) {
     console.error('Get livestock error:', error);
@@ -77,16 +69,21 @@ exports.createLivestock = async (req, res) => {
       });
     }
 
-    const result = await pool.query(
-      `INSERT INTO livestock (tag_number, species, breed, birth_date, gender, health_status, location, weight, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING *`,
-      [tag_number, species, breed, birth_date, gender, health_status || 'healthy', location, weight, notes]
-    );
+    const livestock = await Livestock.create({
+      tag_number,
+      species,
+      breed,
+      birth_date,
+      gender,
+      health_status: health_status || 'healthy',
+      location,
+      weight,
+      notes
+    });
 
     res.status(201).json({
       success: true,
-      data: result.rows[0]
+      data: livestock
     });
   } catch (error) {
     console.error('Create livestock error:', error);
@@ -103,24 +100,24 @@ exports.updateLivestock = async (req, res) => {
     const { id } = req.params;
     const { tag_number, species, breed, birth_date, gender, health_status, location, weight, notes } = req.body;
 
-    const result = await pool.query(
-      `UPDATE livestock 
-       SET tag_number = COALESCE($1, tag_number),
-           species = COALESCE($2, species),
-           breed = COALESCE($3, breed),
-           birth_date = COALESCE($4, birth_date),
-           gender = COALESCE($5, gender),
-           health_status = COALESCE($6, health_status),
-           location = COALESCE($7, location),
-           weight = COALESCE($8, weight),
-           notes = COALESCE($9, notes),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $10
-       RETURNING *`,
-      [tag_number, species, breed, birth_date, gender, health_status, location, weight, notes, id]
+    const updateData = {};
+    if (tag_number !== undefined) updateData.tag_number = tag_number;
+    if (species !== undefined) updateData.species = species;
+    if (breed !== undefined) updateData.breed = breed;
+    if (birth_date !== undefined) updateData.birth_date = birth_date;
+    if (gender !== undefined) updateData.gender = gender;
+    if (health_status !== undefined) updateData.health_status = health_status;
+    if (location !== undefined) updateData.location = location;
+    if (weight !== undefined) updateData.weight = weight;
+    if (notes !== undefined) updateData.notes = notes;
+
+    const livestock = await Livestock.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
     );
 
-    if (result.rows.length === 0) {
+    if (!livestock) {
       return res.status(404).json({
         success: false,
         message: 'Livestock not found'
@@ -129,7 +126,7 @@ exports.updateLivestock = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: livestock
     });
   } catch (error) {
     console.error('Update livestock error:', error);
@@ -145,9 +142,9 @@ exports.deleteLivestock = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query('DELETE FROM livestock WHERE id = $1 RETURNING *', [id]);
+    const livestock = await Livestock.findByIdAndDelete(id);
 
-    if (result.rows.length === 0) {
+    if (!livestock) {
       return res.status(404).json({
         success: false,
         message: 'Livestock not found'
@@ -156,7 +153,7 @@ exports.deleteLivestock = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: livestock
     });
   } catch (error) {
     console.error('Delete livestock error:', error);

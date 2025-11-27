@@ -1,17 +1,29 @@
-const { Pool } = require('pg');
+const mongoose = require("mongoose");
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(
+      process.env.MONGODB_URI || "mongodb://localhost:27017/inventory_db",
+      {
+        // useNewUrlParser and useUnifiedTopology are no longer needed in Mongoose 6+
+      }
+    );
 
-pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL database');
-});
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 
-pool.on('error', (err) => {
-  console.error('❌ Unexpected error on idle client', err);
-  process.exit(-1);
-});
+    mongoose.connection.on("error", (err) => {
+      console.error("MongoDB connection error:", err);
+    });
 
-module.exports = pool;
+    mongoose.connection.on("disconnected", () => {
+      console.log("MongoDB disconnected");
+    });
+
+    return conn;
+  } catch (error) {
+    console.error(`❌ MongoDB connection error: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+module.exports = connectDB;

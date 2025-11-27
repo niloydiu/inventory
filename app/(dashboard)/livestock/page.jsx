@@ -35,7 +35,11 @@ export default function LivestockPage() {
     
     try {
       const data = await livestockApi.getAll(token)
-      setLivestock(data)
+      // Normalize response to always be an array
+      const list = Array.isArray(data) ? data : (data && data.data ? data.data : []);
+      // Ensure each item has an `id` property for client-side usage
+      const normalized = list.map((a) => ({ ...a, id: a.id || a._id }));
+      setLivestock(normalized)
     } catch (error) {
       toast.error("Failed to load livestock")
     } finally {

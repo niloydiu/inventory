@@ -35,7 +35,7 @@ export function AssignmentTable({ assignments, onReturn }) {
         </TableHeader>
         <TableBody>
           {assignments?.map((assignment) => (
-            <TableRow key={assignment.id}>
+            <TableRow key={assignment._id}>
               <TableCell className="font-medium">{assignment.item_name || `Item #${assignment.item_id}`}</TableCell>
               <TableCell>{assignment.employee_name || assignment.user?.username || `User #${assignment.user_id}`}</TableCell>
               <TableCell>{assignment.assigned_quantity}</TableCell>
@@ -45,7 +45,12 @@ export function AssignmentTable({ assignments, onReturn }) {
                   {assignment.status}
                 </Badge>
               </TableCell>
-              <TableCell>{format(new Date(assignment.assigned_date), 'MMM dd, yyyy')}</TableCell>
+              <TableCell>
+                {assignment.assignment_date 
+                  ? format(new Date(assignment.assignment_date), 'MMM dd, yyyy')
+                  : 'N/A'
+                }
+              </TableCell>
               <TableCell className="text-right">
                 {assignment.status !== "Returned" && (
                   <Button

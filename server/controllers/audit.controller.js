@@ -1,45 +1,44 @@
-const pool = require('../config/database');
+const { AuditLog } = require('../models');
 
 // Get all audit logs
 exports.getAllLogs = async (req, res) => {
   try {
     const { user_id, action, resource_type, limit = 100 } = req.query;
     
-    let query = `
-      SELECT a.*, u.username 
-      FROM audit_logs a
-      LEFT JOIN users u ON a.user_id = u.id
-      WHERE 1=1
-    `;
-    const params = [];
-    let paramIndex = 1;
+    // Build query filter
+    const filter = {};
 
     if (user_id) {
-      query += ` AND a.user_id = $${paramIndex}`;
-      params.push(user_id);
-      paramIndex++;
+      filter.user_id = user_id;
     }
 
     if (action) {
-      query += ` AND a.action = $${paramIndex}`;
-      params.push(action);
-      paramIndex++;
+      filter.action = action;
     }
 
     if (resource_type) {
-      query += ` AND a.resource_type = $${paramIndex}`;
-      params.push(resource_type);
-      paramIndex++;
+      filter.resource_type = resource_type;
     }
 
-    query += ` ORDER BY a.created_at DESC LIMIT $${paramIndex}`;
-    params.push(limit);
+    // Fetch audit logs with user population
+    const logs = await AuditLog.find(filter)
+      .populate('user_id', 'username')
+      .sort({ created_at: -1 })
+      .limit(parseInt(limit));
 
-    const result = await pool.query(query, params);
+    // Format response to include username at top level (matching PostgreSQL format)
+    const formattedLogs = logs.map(log => {
+      const logObj = log.toObject();
+      return {
+        ...logObj,
+        username: logObj.user_id?.username || null,
+        user_id: logObj.user_id?._id || logObj.user_id
+      };
+    });
 
     res.json({
       success: true,
-      data: result.rows
+      data: formattedLogs
     });
   } catch (error) {
     console.error('Get audit logs error:', error);
@@ -56,25 +55,66 @@ exports.getStats = async (req, res) => {
     const stats = {};
 
     // Total logs
-    const totalResult = await pool.query('SELECT COUNT(*) as count FROM audit_logs');
-    stats.total_logs = parseInt(totalResult.rows[0].count);
+    stats.total_logs = await AuditLog.countDocuments();
 
-    // Logs by action
-    const actionResult = await pool.query(
-      'SELECT action, COUNT(*) as count FROM audit_logs GROUP BY action ORDER BY count DESC'
-    );
-    stats.by_action = actionResult.rows;
+    // Logs by action - using aggregation
+    const actionStats = await AuditLog.aggregate([
+      {
+        $group: {
+          _id: '$action',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { count: -1 }
+      },
+      {
+        $project: {
+          _id: 0,
+          action: '$_id',
+          count: 1
+        }
+      }
+    ]);
+    stats.by_action = actionStats;
 
-    // Logs by user
-    const userResult = await pool.query(
-      `SELECT u.username, COUNT(*) as count 
-       FROM audit_logs a
-       LEFT JOIN users u ON a.user_id = u.id
-       GROUP BY u.username
-       ORDER BY count DESC
-       LIMIT 10`
-    );
-    stats.by_user = userResult.rows;
+    // Logs by user - using aggregation with lookup
+    const userStats = await AuditLog.aggregate([
+      {
+        $group: {
+          _id: '$user_id',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          username: { $ifNull: ['$user.username', null] },
+          count: 1
+        }
+      },
+      {
+        $sort: { count: -1 }
+      },
+      {
+        $limit: 10
+      }
+    ]);
+    stats.by_user = userStats;
 
     res.json({
       success: true,

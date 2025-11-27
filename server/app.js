@@ -1,8 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const connectDB = require('./config/database');
 
 const app = express();
+
+// Connect to MongoDB
+connectDB();
 
 // Middleware
 app.use(cors({
@@ -28,6 +32,10 @@ const feedsRoutes = require('./routes/feeds.routes');
 const usersRoutes = require('./routes/users.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const auditRoutes = require('./routes/audit.routes');
+const locationsRoutes = require('./routes/locations.routes');
+const maintenanceRoutes = require('./routes/maintenance.routes');
+const reservationsRoutes = require('./routes/reservations.routes');
+const approvalsRoutes = require('./routes/approvals.routes');
 
 // API routes
 const API_PREFIX = '/api/v1';
@@ -40,6 +48,10 @@ app.use(`${API_PREFIX}/feeds`, feedsRoutes);
 app.use(`${API_PREFIX}/users`, usersRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${API_PREFIX}/audit-logs`, auditRoutes);
+app.use(`${API_PREFIX}/locations`, locationsRoutes);
+app.use(`${API_PREFIX}/maintenance`, maintenanceRoutes);
+app.use(`${API_PREFIX}/reservations`, reservationsRoutes);
+app.use(`${API_PREFIX}/approvals`, approvalsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

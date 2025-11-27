@@ -1,27 +1,21 @@
-const pool = require('../config/database');
+const { Feed } = require('../models');
 
 // Get all feeds
 exports.getAllFeeds = async (req, res) => {
   try {
     const { type } = req.query;
     
-    let query = 'SELECT * FROM feeds WHERE 1=1';
-    const params = [];
-    let paramIndex = 1;
+    const filter = {};
 
     if (type) {
-      query += ` AND type = $${paramIndex}`;
-      params.push(type);
-      paramIndex++;
+      filter.type = type;
     }
 
-    query += ' ORDER BY created_at DESC';
-
-    const result = await pool.query(query, params);
+    const feeds = await Feed.find(filter).sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      data: result.rows
+      data: feeds
     });
   } catch (error) {
     console.error('Get feeds error:', error);
@@ -37,9 +31,9 @@ exports.getFeedById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query('SELECT * FROM feeds WHERE id = $1', [id]);
+    const feed = await Feed.findById(id);
 
-    if (result.rows.length === 0) {
+    if (!feed) {
       return res.status(404).json({
         success: false,
         message: 'Feed not found'
@@ -48,7 +42,7 @@ exports.getFeedById = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: feed
     });
   } catch (error) {
     console.error('Get feed error:', error);
@@ -71,16 +65,23 @@ exports.createFeed = async (req, res) => {
       });
     }
 
-    const result = await pool.query(
-      `INSERT INTO feeds (name, type, quantity, unit, expiry_date, batch_number, supplier, cost_price, selling_price, sku, location)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING *`,
-      [name, type, quantity, unit, expiry_date, batch_number, supplier, cost_price, selling_price, sku, location]
-    );
+    const feed = await Feed.create({
+      name,
+      type,
+      quantity,
+      unit,
+      expiry_date,
+      batch_number,
+      supplier,
+      cost_price,
+      selling_price,
+      sku,
+      location
+    });
 
     res.status(201).json({
       success: true,
-      data: result.rows[0]
+      data: feed
     });
   } catch (error) {
     console.error('Create feed error:', error);
@@ -97,26 +98,27 @@ exports.updateFeed = async (req, res) => {
     const { id } = req.params;
     const { name, type, quantity, unit, expiry_date, batch_number, supplier, cost_price, selling_price, sku, location } = req.body;
 
-    const result = await pool.query(
-      `UPDATE feeds 
-       SET name = COALESCE($1, name),
-           type = COALESCE($2, type),
-           quantity = COALESCE($3, quantity),
-           unit = COALESCE($4, unit),
-           expiry_date = COALESCE($5, expiry_date),
-           batch_number = COALESCE($6, batch_number),
-           supplier = COALESCE($7, supplier),
-           cost_price = COALESCE($8, cost_price),
-           selling_price = COALESCE($9, selling_price),
-           sku = COALESCE($10, sku),
-           location = COALESCE($11, location),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $12
-       RETURNING *`,
-      [name, type, quantity, unit, expiry_date, batch_number, supplier, cost_price, selling_price, sku, location, id]
+    const updateData = {};
+    
+    if (name !== undefined) updateData.name = name;
+    if (type !== undefined) updateData.type = type;
+    if (quantity !== undefined) updateData.quantity = quantity;
+    if (unit !== undefined) updateData.unit = unit;
+    if (expiry_date !== undefined) updateData.expiry_date = expiry_date;
+    if (batch_number !== undefined) updateData.batch_number = batch_number;
+    if (supplier !== undefined) updateData.supplier = supplier;
+    if (cost_price !== undefined) updateData.cost_price = cost_price;
+    if (selling_price !== undefined) updateData.selling_price = selling_price;
+    if (sku !== undefined) updateData.sku = sku;
+    if (location !== undefined) updateData.location = location;
+
+    const feed = await Feed.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
     );
 
-    if (result.rows.length === 0) {
+    if (!feed) {
       return res.status(404).json({
         success: false,
         message: 'Feed not found'
@@ -125,7 +127,7 @@ exports.updateFeed = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: feed
     });
   } catch (error) {
     console.error('Update feed error:', error);
@@ -141,9 +143,9 @@ exports.deleteFeed = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query('DELETE FROM feeds WHERE id = $1 RETURNING *', [id]);
+    const feed = await Feed.findByIdAndDelete(id);
 
-    if (result.rows.length === 0) {
+    if (!feed) {
       return res.status(404).json({
         success: false,
         message: 'Feed not found'
@@ -152,7 +154,7 @@ exports.deleteFeed = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: feed
     });
   } catch (error) {
     console.error('Delete feed error:', error);

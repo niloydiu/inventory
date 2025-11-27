@@ -1,6 +1,6 @@
-const pool = require('../config/database');
+const { AuditLog } = require('../models');
 
-const auditLog = (action, resourceType) => {
+const auditLog = (action, entityType) => {
   return async (req, res, next) => {
     const originalSend = res.send;
     
@@ -11,22 +11,21 @@ const auditLog = (action, resourceType) => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
         const logEntry = {
           user_id: req.user?.user_id || null,
+          username: req.user?.username || 'anonymous',
           action,
-          resource_type: resourceType,
-          resource_id: req.params.id || null,
-          details: JSON.stringify({
+          entity_type: entityType,
+          entity_id: req.params.id || null,
+          details: {
             method: req.method,
             path: req.path,
             body: req.body
-          }),
-          ip_address: req.ip || req.connection.remoteAddress
+          },
+          ip_address: req.ip || req.connection.remoteAddress,
+          user_agent: req.get('user-agent')
         };
 
-        pool.query(
-          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details, ip_address)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [logEntry.user_id, logEntry.action, logEntry.resource_type, logEntry.resource_id, logEntry.details, logEntry.ip_address]
-        ).catch(err => console.error('Audit log error:', err));
+        AuditLog.create(logEntry)
+          .catch(err => console.error('Audit log error:', err));
       }
 
       return res.send(data);
