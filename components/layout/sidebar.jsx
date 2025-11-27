@@ -1,0 +1,83 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { cn } from "@/lib/utils"
+import {
+  LayoutDashboard,
+  Package,
+  UserCheck,
+  Wheat,
+  MapPin,
+  Wrench,
+  Calendar,
+  CheckCircle,
+  BarChart3,
+  Users,
+  FileText,
+  Settings,
+  LogOut,
+  PawPrint
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+
+const sidebarItems = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
+  { name: "Inventory", href: "/inventory", icon: Package, roles: ["admin", "manager", "employee"] },
+  { name: "Assignments", href: "/assignments", icon: UserCheck, roles: ["admin", "manager", "employee"] },
+  { name: "Livestock", href: "/livestock", icon: PawPrint, roles: ["admin", "manager", "employee"] },
+  { name: "Feeds", href: "/feeds", icon: Wheat, roles: ["admin", "manager", "employee"] },
+  { name: "Locations", href: "/locations", icon: MapPin, roles: ["admin", "manager"] },
+  { name: "Maintenance", href: "/maintenance", icon: Wrench, roles: ["admin", "manager", "employee"] },
+  { name: "Reservations", href: "/reservations", icon: Calendar, roles: ["admin", "manager", "employee"] },
+  { name: "Approvals", href: "/approvals", icon: CheckCircle, roles: ["admin", "manager", "employee"] },
+  { name: "Reports", href: "/reports", icon: BarChart3, roles: ["admin", "manager"] },
+  { name: "Users", href: "/users", icon: Users, roles: ["admin"] },
+  { name: "Audit Logs", href: "/audit-logs", icon: FileText, roles: ["admin"] },
+  { name: "Settings", href: "/settings", icon: Settings, roles: ["admin", "manager", "employee"] },
+]
+
+export function Sidebar({ className }) {
+  const pathname = usePathname()
+  const { user, logout } = useAuth()
+
+  if (!user) return null
+
+  const filteredItems = sidebarItems.filter(item => item.roles.includes(user.role))
+
+  return (
+    <div className={cn("pb-12 min-h-screen border-r bg-background", className)}>
+      <div className="space-y-4 py-4">
+        <div className="px-3 py-2">
+          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+            Inventory System
+          </h2>
+          <div className="space-y-1">
+            {filteredItems.map((item) => (
+              <Button
+                key={item.href}
+                variant={pathname.startsWith(item.href) ? "secondary" : "ghost"}
+                className="w-full justify-start"
+                asChild
+              >
+                <Link href={item.href}>
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.name}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="px-3 py-2 mt-auto border-t">
+        <div className="space-y-1">
+           <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50" onClick={logout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
