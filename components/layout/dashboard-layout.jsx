@@ -12,18 +12,23 @@ export default function DashboardLayout({ children }) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/login")
+      router.replace("/login")
     }
   }, [isAuthenticated, isLoading, router])
 
+  // Show loading state while checking authentication
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
       </div>
     )
   }
 
+  // Don't render anything if not authenticated (will redirect)
   if (!isAuthenticated) {
     return null
   }
