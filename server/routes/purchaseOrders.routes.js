@@ -15,9 +15,11 @@ const poValidation = [
     .withMessage("At least one item is required"),
   body("items.*.item_id").notEmpty().withMessage("Item ID is required"),
   body("items.*.quantity")
-    .isInt({ min: 1 })
+    .isNumeric()
+    .isFloat({ min: 1 })
     .withMessage("Quantity must be at least 1"),
   body("items.*.unit_price")
+    .isNumeric()
     .isFloat({ min: 0 })
     .withMessage("Unit price must be non-negative"),
 ];
@@ -28,6 +30,7 @@ router.get("/stats", purchaseOrdersController.getPurchaseOrderStats);
 router.get("/:id", purchaseOrdersController.getPurchaseOrderById);
 router.post("/", poValidation, purchaseOrdersController.createPurchaseOrder);
 router.put("/:id", poValidation, purchaseOrdersController.updatePurchaseOrder);
+router.delete("/:id", purchaseOrdersController.deletePurchaseOrder);
 router.post("/:id/approve", purchaseOrdersController.approvePurchaseOrder);
 router.post("/:id/receive", purchaseOrdersController.receivePurchaseOrder);
 router.post("/:id/cancel", purchaseOrdersController.cancelPurchaseOrder);
