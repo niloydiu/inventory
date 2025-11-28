@@ -4,9 +4,12 @@ const purchaseOrderSchema = new mongoose.Schema(
   {
     po_number: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
+      default: function() {
+        // This will be overridden by pre-save hook for proper async generation
+        return `TEMP-${Date.now()}`;
+      }
     },
     supplier_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -152,12 +155,22 @@ purchaseOrderSchema.index({ created_by: 1 });
 
 // Auto-generate PO number
 purchaseOrderSchema.pre("save", async function () {
+  console.log('[PO Model] Pre-save hook called, isNew:', this.isNew, 'po_number:', this.po_number);
+  
   if (this.isNew && !this.po_number) {
-    const count = await this.constructor.countDocuments();
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    this.po_number = `PO-${year}${month}-${String(count + 1).padStart(5, "0")}`;
+    try {
+      const count = await this.constructor.countDocuments();
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      this.po_number = `PO-${year}${month}-${String(count + 1).padStart(5, "0")}`;
+      
+      console.log('[PO Model] Generated PO number:', this.po_number);
+    } catch (error) {
+      console.error('[PO Model] Error generating PO number:', error);
+      // Fallback PO number
+      this.po_number = `PO-${Date.now()}`;
+    }
   }
 });
 
