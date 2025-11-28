@@ -25,7 +25,49 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 'loopback');
 }
 
-// Security middleware - Helmet (must be first)
+// CORS - MUST BE FIRST, before any other middleware
+// Completely open CORS - Allow everything
+console.log("🌐 CORS: Completely open - Allowing ALL origins, methods, and headers");
+
+// Manual CORS headers as fallback (before CORS middleware)
+app.use((req, res, next) => {
+  // Get the origin from request
+  const origin = req.headers.origin || req.headers.referer || '*';
+  
+  // Set CORS headers manually
+  res.header('Access-Control-Allow-Origin', origin);
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Cookie, Set-Cookie, X-Forwarded-For');
+  res.header('Access-Control-Expose-Headers', 'Content-Range, X-Content-Range, Set-Cookie');
+  res.header('Access-Control-Max-Age', '86400');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
+
+// CORS middleware - Completely open
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow ALL origins - no restrictions at all
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: '*', // Allow all headers
+    exposedHeaders: '*', // Expose all headers
+    maxAge: 86400,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
+
+// Security middleware - Helmet (after CORS, with CORS disabled)
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -37,6 +79,7 @@ app.use(
       },
     },
     crossOriginEmbedderPolicy: false, // For Next.js compatibility
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow cross-origin resources
   })
 );
 
@@ -62,42 +105,8 @@ const apiLimiter = rateLimit({
   validate: { trustProxy: false }, // Disable trust proxy validation warning
 });
 
-// CORS configuration - Allow ALL origins (*) to fix CORS issues
-// WARNING: This allows requests from any origin. Restrict in production for security.
-console.log("🌐 CORS: Allowing ALL origins (*) - Open for debugging");
-
-// CORS middleware - Allow everything
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow ALL origins - no restrictions
-      console.log(`✅ CORS: Allowing request from: ${origin || "no origin"}`);
-      return callback(null, true);
-    },
-    credentials: true, // Allow credentials (cookies, authorization headers)
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-    allowedHeaders: [
-      "Content-Type", 
-      "Authorization", 
-      "X-Requested-With",
-      "Accept",
-      "Origin",
-      "Access-Control-Request-Method",
-      "Access-Control-Request-Headers",
-      "Cookie",
-      "Set-Cookie",
-      "X-Forwarded-For"
-    ],
-    exposedHeaders: [
-      "Content-Range", 
-      "X-Content-Range",
-      "Set-Cookie"
-    ],
-    maxAge: 86400, // 24 hours
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  })
-);
+// CORS is already configured at the top of the file (before Helmet)
+// This section removed - CORS is now at the top for maximum compatibility
 
 // Body parsing with size limits
 app.use(express.json({ limit: "10mb" }));
