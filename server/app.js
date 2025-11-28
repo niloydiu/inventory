@@ -17,12 +17,12 @@ connectDB();
 // Trust proxy configuration
 // In production behind a proxy/load balancer, this should be set to the proxy hop count
 // For development with Next.js custom server, we trust the loopback
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   // In production, trust the first proxy (Vercel, Nginx, etc.)
-  app.set('trust proxy', 1);
+  app.set("trust proxy", 1);
 } else {
   // In development, trust loopback for Next.js custom server
-  app.set('trust proxy', 'loopback');
+  app.set("trust proxy", "loopback");
 }
 
 // Security middleware - Helmet (must be first)
@@ -53,13 +53,19 @@ const authLimiter = rateLimit({
   validate: { trustProxy: false }, // Disable trust proxy validation warning
 });
 
+// More flexible API rate limiter
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  windowMs: 1 * 60 * 1000, // 1 minute window (shorter, more granular)
+  max: process.env.NODE_ENV === "production" ? 60 : 200, // 60 req/min in production, 200 in dev
   message: { success: false, message: "Too many requests, please slow down" },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { trustProxy: false }, // Disable trust proxy validation warning
+  validate: { trustProxy: false },
+  // Skip rate limiting for certain safe endpoints
+  skip: (req) => {
+    const skipPaths = ["/health", "/api/v1/health"];
+    return skipPaths.includes(req.path);
+  },
 });
 
 // CORS configuration with multiple origins support
