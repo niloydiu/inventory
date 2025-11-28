@@ -274,11 +274,23 @@ itemSchema.virtual("stock_status").get(function () {
 // Auto-generate SKU if not provided
 itemSchema.pre("save", async function () {
   if (this.isNew && !this.sku) {
-    const count = await this.constructor.countDocuments();
     const prefix = this.category
       ? this.category.substring(0, 3).toUpperCase()
       : "ITM";
-    this.sku = `${prefix}-${String(count + 1).padStart(6, "0")}`;
+    
+    // Find the highest existing SKU number for this prefix
+    const existingItems = await this.constructor.find({
+      sku: { $regex: `^${prefix}-\\d{6}$` }
+    }).sort({ sku: -1 }).limit(1);
+    
+    let nextNumber = 1;
+    if (existingItems.length > 0) {
+      const lastSku = existingItems[0].sku;
+      const lastNumber = parseInt(lastSku.split('-')[1], 10);
+      nextNumber = lastNumber + 1;
+    }
+    
+    this.sku = `${prefix}-${String(nextNumber).padStart(6, "0")}`;
   }
 
   // Update reserved quantity
