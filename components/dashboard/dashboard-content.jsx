@@ -27,9 +27,13 @@ export function DashboardContent() {
       try {
         console.log("Fetching dashboard stats...");
         console.log("API URL:", DASHBOARD_ENDPOINTS.STATS);
-        const data = await apiClient.get(DASHBOARD_ENDPOINTS.STATS, {}, token);
-        console.log("Dashboard data received:", data);
-        setStats(data);
+        const response = await apiClient.get(
+          DASHBOARD_ENDPOINTS.STATS,
+          {},
+          token
+        );
+        console.log("Dashboard response received:", response);
+        setStats(response && response.success ? response.data : null);
         setError(null);
       } catch (error) {
         console.error("Dashboard fetch error:", error);

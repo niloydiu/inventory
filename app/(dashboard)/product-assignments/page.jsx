@@ -101,13 +101,15 @@ export default function ProductAssignmentsPage() {
       });
 
       const response = await api.get(`/product-assignments?${params}`);
-      if (response.success) {
-        setAssignments(response.data);
-        setPagination((prev) => ({
-          ...prev,
-          total: response.pagination.total,
-          totalPages: response.pagination.totalPages,
-        }));
+      if (response && response.success) {
+        setAssignments(response.data || []);
+        if (response.pagination) {
+          setPagination((prev) => ({
+            ...prev,
+            total: response.pagination.total,
+            totalPages: response.pagination.totalPages,
+          }));
+        }
       }
     } catch (error) {
       console.error("Failed to fetch assignments:", error);
@@ -120,8 +122,8 @@ export default function ProductAssignmentsPage() {
   const fetchStats = async () => {
     try {
       const response = await api.get("/product-assignments/stats");
-      if (response.success) {
-        setStats(response.stats);
+      if (response && response.success) {
+        setStats(response.stats || {});
       }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
@@ -131,8 +133,8 @@ export default function ProductAssignmentsPage() {
   const fetchItems = async () => {
     try {
       const response = await api.get("/items?limit=1000&status=active");
-      if (response.success) {
-        setItems(response.data);
+      if (response && response.success) {
+        setItems(response.data || []);
       }
     } catch (error) {
       console.error("Failed to fetch items:", error);
@@ -142,8 +144,8 @@ export default function ProductAssignmentsPage() {
   const fetchEmployees = async () => {
     try {
       const response = await api.get("/users?limit=1000&role=employee,manager");
-      if (response.success) {
-        setEmployees(response.data);
+      if (response && response.success) {
+        setEmployees(response.data || []);
       }
     } catch (error) {
       console.error("Failed to fetch employees:", error);
@@ -154,7 +156,7 @@ export default function ProductAssignmentsPage() {
     e.preventDefault();
     try {
       const response = await api.post("/product-assignments", formData);
-      if (response.success) {
+      if (response && response.success) {
         toast.success("Product assigned successfully");
         setShowAssignDialog(false);
         resetForm();
@@ -173,7 +175,7 @@ export default function ProductAssignmentsPage() {
         `/product-assignments/${selectedAssignment._id}/return`,
         returnData
       );
-      if (response.success) {
+      if (response && response.success) {
         toast.success("Product returned successfully");
         setShowReturnDialog(false);
         setReturnData({
@@ -195,7 +197,7 @@ export default function ProductAssignmentsPage() {
         `/product-assignments/${assignmentId}/acknowledge`,
         { signature: "Digital Signature" }
       );
-      if (response.success) {
+      if (response && response.success) {
         toast.success("Assignment acknowledged");
         fetchAssignments();
       }
@@ -209,7 +211,7 @@ export default function ProductAssignmentsPage() {
 
     try {
       const response = await api.delete(`/product-assignments/${id}`);
-      if (response.success) {
+      if (response && response.success) {
         toast.success("Assignment deleted successfully");
         fetchAssignments();
         fetchStats();
