@@ -57,7 +57,40 @@ exports.getLocationById = async (req, res) => {
 // Create location
 exports.createLocation = async (req, res) => {
   try {
-    const locationData = req.body;
+    console.log('[Locations Controller] Create location called');
+    console.log('[Locations Controller] req.user:', req.user);
+    console.log('[Locations Controller] req.body:', req.body);
+    
+    const locationData = { ...req.body };
+    
+    console.log('[Locations Controller] locationData before code generation:', locationData);
+    
+    // Auto-generate code from name if not provided
+    if (!locationData.code) {
+      console.log('[Locations Controller] Generating code for location:', locationData.name);
+      
+      let baseCode = locationData.name
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '') // Remove non-alphanumeric
+        .substring(0, 8); // Limit to 8 chars
+      
+      console.log('[Locations Controller] Base code:', baseCode);
+      
+      // Ensure uniqueness by appending a number if needed
+      let code = baseCode;
+      let counter = 1;
+      
+      while (await Location.findOne({ code })) {
+        console.log('[Locations Controller] Code conflict, trying:', code);
+        code = baseCode + String(counter).padStart(2, '0');
+        counter++;
+      }
+      
+      locationData.code = code;
+      console.log('[Locations Controller] Final generated code:', code);
+    }
+
+    console.log('[Locations Controller] locationData after code generation:', locationData);
 
     const location = await Location.create(locationData);
     
