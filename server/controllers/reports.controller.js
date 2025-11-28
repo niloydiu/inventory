@@ -4,15 +4,39 @@ const { Item, Assignment } = require("../models");
 exports.getLowStockReport = async (req, res) => {
   try {
     const { threshold = 10 } = req.query;
+    const thresholdValue = parseInt(threshold);
 
+    // Find items where quantity is less than or equal to either:
+    // 1. The provided threshold, or
+    // 2. The item's own low_stock_threshold (if it's lower than the provided threshold)
     const items = await Item.find({
-      $expr: { $lte: ["$available_quantity", parseInt(threshold)] },
-      status: "active",
-    }).sort({ available_quantity: 1 });
+      $expr: {
+        $lte: [
+          "$quantity", 
+          {
+            $min: [
+              thresholdValue,
+              { $ifNull: ["$low_stock_threshold", thresholdValue] }
+            ]
+          }
+        ]
+      },
+      status: { $ne: "inactive" }
+    }).populate("category_id", "name")
+    .populate("location_id", "name")
+    .sort({ quantity: 1 });
+
+    // Transform data to match frontend expectations
+    const transformedItems = items.map(item => ({
+      ...item.toObject(),
+      category: item.category_id?.name || item.category || 'Uncategorized',
+      minimum_level: item.low_stock_threshold || thresholdValue,
+      unit_type: item.unit || 'units'
+    }));
 
     res.json({
       success: true,
-      data: items,
+      data: transformedItems,
     });
   } catch (error) {
     console.error("Get low stock report error:", error);
