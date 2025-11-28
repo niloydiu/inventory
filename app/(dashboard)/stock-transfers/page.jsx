@@ -50,10 +50,11 @@ import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
 
 const statusColors = {
+  draft: "bg-gray-100 text-gray-800",
   pending: "bg-yellow-100 text-yellow-800",
-  approved: "bg-blue-100 text-blue-800",
   in_transit: "bg-purple-100 text-purple-800",
-  completed: "bg-green-100 text-green-800",
+  partially_received: "bg-blue-100 text-blue-800",
+  received: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };
 
@@ -78,8 +79,10 @@ export default function StockTransfersPage() {
     if (!token) return;
     try {
       const response = await apiClient.get("/stock-transfers", {}, token);
-      setTransfers(Array.isArray(response) ? response : response?.data || []);
+      console.log("[Stock Transfers] API Response:", response);
+      setTransfers(Array.isArray(response) ? response : response?.transfers || []);
     } catch (error) {
+      console.error("Failed to load stock transfers:", error);
       toast.error("Failed to load stock transfers");
     } finally {
       setLoading(false);
@@ -99,7 +102,7 @@ export default function StockTransfersPage() {
   async function fetchItems() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/items", {}, token);
+      const response = await apiClient.get("/items", {}, token);
       setItems(
         Array.isArray(response)
           ? response
@@ -112,9 +115,15 @@ export default function StockTransfersPage() {
 
   async function handleSubmit() {
     try {
+      // Transform items to match backend expectations
+      const transformedItems = transferItems.map(item => ({
+        item_id: item.item_id,
+        quantity_sent: item.quantity
+      }));
+      
       const dataToSubmit = {
         ...formData,
-        items: transferItems,
+        items: transformedItems,
         created_by: user?.userId,
       };
 
@@ -175,12 +184,18 @@ export default function StockTransfersPage() {
     setFormData({
       from_location_id: transfer.from_location_id?._id || "",
       to_location_id: transfer.to_location_id?._id || "",
-      transfer_date: transfer.transfer_date
-        ? format(new Date(transfer.transfer_date), "yyyy-MM-dd")
+      transfer_date: transfer.request_date
+        ? format(new Date(transfer.request_date), "yyyy-MM-dd")
         : "",
       notes: transfer.notes || "",
+      status: transfer.status || "",
     });
-    setTransferItems(transfer.items || []);
+    // Transform items back to frontend format
+    const frontendItems = (transfer.items || []).map(item => ({
+      item_id: item.item_id?._id || item.item_id,
+      quantity: item.quantity_sent || item.quantity_requested || 1,
+    }));
+    setTransferItems(frontendItems);
   }
 
   function addTransferItem() {
@@ -273,9 +288,9 @@ export default function StockTransfersPage() {
                         {transfer.to_location_id?.name || "N/A"}
                       </TableCell>
                       <TableCell>
-                        {transfer.transfer_date
+                        {transfer.request_date
                           ? format(
-                              new Date(transfer.transfer_date),
+                              new Date(transfer.request_date),
                               "MMM dd, yyyy"
                             )
                           : "N/A"}
@@ -385,8 +400,8 @@ export default function StockTransfersPage() {
                       Transfer Date
                     </Label>
                     <p>
-                      {viewDialog.transfer_date
-                        ? format(new Date(viewDialog.transfer_date), "PPP")
+                      {viewDialog.request_date
+                        ? format(new Date(viewDialog.request_date), "PPP")
                         : "N/A"}
                     </p>
                   </div>

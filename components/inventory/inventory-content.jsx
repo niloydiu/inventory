@@ -37,6 +37,7 @@ export function InventoryContent() {
         setItems([])
       }
     } catch (error) {
+      console.error('Failed to load items:', error)
       toast.error("Failed to load items")
     } finally {
       setLoading(false)

@@ -55,7 +55,7 @@ exports.getAllTransfers = async (req, res) => {
         .populate("from_location_id", "name code")
         .populate("to_location_id", "name code")
         .populate("items.item_id", "name sku")
-        .populate("initiated_by", "full_name email")
+        .populate("requested_by", "full_name email")
         .populate("approved_by", "full_name email")
         .populate("received_by", "full_name email")
         .sort(sort)
@@ -87,7 +87,7 @@ exports.getTransferById = async (req, res) => {
       .populate("from_location_id")
       .populate("to_location_id")
       .populate("items.item_id", "name sku description")
-      .populate("initiated_by", "full_name email")
+      .populate("requested_by", "full_name email")
       .populate("approved_by", "full_name email")
       .populate("received_by", "full_name email");
 
@@ -110,20 +110,29 @@ exports.createTransfer = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // Validate from and to locations are different
-    if (req.body.from_location_id === req.body.to_location_id) {
-      return res.status(400).json({
-        message: "From and To locations must be different",
-      });
-    }
-
     // Validate item availability at from_location (optional - depends on your business logic)
     // For now, we'll just create the transfer
 
-    const transfer = new StockTransfer({
-      ...req.body,
-      initiated_by: req.user.user_id,
-    });
+    // Transform the request data to match the schema
+    const transferData = {
+      from_location_id: req.body.from_location_id,
+      to_location_id: req.body.to_location_id,
+      status: req.body.status || 'draft',
+      requested_by: req.user.userId || req.user.user_id,
+      request_date: req.body.transfer_date ? new Date(req.body.transfer_date) : new Date(),
+      expected_delivery_date: req.body.expected_delivery_date ? new Date(req.body.expected_delivery_date) : undefined,
+      notes: req.body.notes,
+      shipping_method: req.body.shipping_method,
+      items: req.body.items.map(item => ({
+        item_id: item.item_id,
+        quantity_requested: item.quantity_sent, // Map quantity_sent to quantity_requested
+        quantity_sent: item.quantity_sent,
+        batch_number: item.batch_number,
+        notes: item.notes
+      }))
+    };
+
+    const transfer = new StockTransfer(transferData);
 
     await transfer.save();
 
@@ -131,6 +140,7 @@ exports.createTransfer = async (req, res) => {
       { path: "from_location_id", select: "name code" },
       { path: "to_location_id", select: "name code" },
       { path: "items.item_id", select: "name sku" },
+      { path: "requested_by", select: "full_name email" },
     ]);
 
     res.status(201).json({
@@ -164,13 +174,36 @@ exports.updateTransfer = async (req, res) => {
       });
     }
 
-    Object.assign(transfer, req.body);
+    // Transform the request data to match the schema
+    const updateData = {
+      from_location_id: req.body.from_location_id,
+      to_location_id: req.body.to_location_id,
+      status: req.body.status,
+      request_date: req.body.transfer_date ? new Date(req.body.transfer_date) : undefined,
+      expected_delivery_date: req.body.expected_delivery_date ? new Date(req.body.expected_delivery_date) : undefined,
+      notes: req.body.notes,
+      shipping_method: req.body.shipping_method,
+    };
+
+    // Only update items if provided
+    if (req.body.items) {
+      updateData.items = req.body.items.map(item => ({
+        item_id: item.item_id,
+        quantity_requested: item.quantity_sent, // Map quantity_sent to quantity_requested
+        quantity_sent: item.quantity_sent,
+        batch_number: item.batch_number,
+        notes: item.notes
+      }));
+    }
+
+    Object.assign(transfer, updateData);
     await transfer.save();
 
     await transfer.populate([
       { path: "from_location_id", select: "name code" },
       { path: "to_location_id", select: "name code" },
       { path: "items.item_id", select: "name sku" },
+      { path: "requested_by", select: "full_name email" },
     ]);
 
     res.json({
@@ -425,6 +458,33 @@ exports.getTransferStats = async (req, res) => {
     });
   } catch (error) {
     console.error("[Transfers Controller] Error getting stats:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Delete transfer
+exports.deleteTransfer = async (req, res) => {
+  try {
+    const transfer = await StockTransfer.findById(req.params.id);
+
+    if (!transfer) {
+      return res.status(404).json({ message: "Transfer not found" });
+    }
+
+    // Prevent deletion if transfer is already received or in transit
+    if (transfer.status === "received" || transfer.status === "in_transit") {
+      return res.status(400).json({
+        message: `Cannot delete transfer with status: ${transfer.status}`,
+      });
+    }
+
+    await StockTransfer.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: "Transfer deleted successfully",
+    });
+  } catch (error) {
+    console.error("[Transfers Controller] Error deleting transfer:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

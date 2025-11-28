@@ -109,7 +109,7 @@ export default function StockMovementsPage() {
   async function fetchItems() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/items", {}, token);
+      const response = await apiClient.get("/items", {}, token);
       setItems(
         Array.isArray(response)
           ? response
@@ -123,7 +123,7 @@ export default function StockMovementsPage() {
   async function fetchLocations() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/locations", {}, token);
+      const response = await apiClient.get("/locations", {}, token);
       setLocations(Array.isArray(response) ? response : response?.data || []);
     } catch (error) {
       console.error("Failed to load locations");
