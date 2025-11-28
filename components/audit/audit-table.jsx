@@ -29,7 +29,6 @@ export function AuditTable({ logs }) {
             <TableHead>User</TableHead>
             <TableHead>Resource</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>IP Address</TableHead>
             <TableHead>Timestamp</TableHead>
           </TableRow>
         </TableHeader>
@@ -42,17 +41,18 @@ export function AuditTable({ logs }) {
                 </Badge>
               </TableCell>
               <TableCell className="font-medium">{log.username || 'System'}</TableCell>
-              <TableCell>{log.resource_type || 'N/A'}</TableCell>
-              <TableCell className="max-w-md truncate">{log.description}</TableCell>
-              <TableCell>{log.ip_address || 'N/A'}</TableCell>
+              <TableCell>{log.entity_type || log.resource_type || '-'}</TableCell>
+              <TableCell className="max-w-md truncate">
+                {log.details ? (typeof log.details === 'string' ? log.details : JSON.stringify(log.details)) : log.description || '-'}
+              </TableCell>
               <TableCell>
-                {log.created_at ? format(new Date(log.created_at), 'MMM dd, yyyy HH:mm:ss') : 'N/A'}
+                {log.created_at ? format(new Date(log.created_at), 'MMM dd, yyyy HH:mm:ss') : '-'}
               </TableCell>
             </TableRow>
           ))}
           {(!logs || logs.length === 0) && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
                 No audit logs found
               </TableCell>
             </TableRow>
