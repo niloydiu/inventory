@@ -32,10 +32,17 @@ console.log("🌐 CORS: Completely open - Allowing ALL origins, methods, and hea
 // Manual CORS headers as fallback (before CORS middleware)
 app.use((req, res, next) => {
   // Get the origin from request
-  const origin = req.headers.origin || req.headers.referer || '*';
+  const origin = req.headers.origin;
   
   // Set CORS headers manually
-  res.header('Access-Control-Allow-Origin', origin);
+  // IMPORTANT: When credentials: true, we CANNOT use '*' - must use specific origin
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    // If no origin, allow all (but credentials won't work)
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Cookie, Set-Cookie, X-Forwarded-For');
