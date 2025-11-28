@@ -49,19 +49,45 @@ import apiClient from "@/lib/api-client";
 const movementTypeColors = {
   purchase: "bg-green-100 text-green-800",
   sale: "bg-blue-100 text-blue-800",
+  transfer_in: "bg-purple-100 text-purple-800",
+  transfer_out: "bg-purple-100 text-purple-800",
   transfer: "bg-purple-100 text-purple-800",
+  adjustment_increase: "bg-yellow-100 text-yellow-800",
+  adjustment_decrease: "bg-orange-100 text-orange-800",
   adjustment: "bg-yellow-100 text-yellow-800",
   return: "bg-orange-100 text-orange-800",
   damage: "bg-red-100 text-red-800",
+  expired: "bg-red-100 text-red-800",
+  assignment: "bg-indigo-100 text-indigo-800",
+  return_assignment: "bg-indigo-100 text-indigo-800",
 };
 
 const movementTypeIcons = {
   purchase: TrendingUp,
   sale: TrendingDown,
+  transfer_in: Activity,
+  transfer_out: Activity,
   transfer: Activity,
+  adjustment_increase: TrendingUp,
+  adjustment_decrease: TrendingDown,
   adjustment: Activity,
   return: Activity,
   damage: TrendingDown,
+  expired: TrendingDown,
+  assignment: Activity,
+  return_assignment: Activity,
+};
+
+// Format movement type for display
+const formatMovementType = (type) => {
+  const typeMap = {
+    transfer_in: "Transfer In",
+    transfer_out: "Transfer Out",
+    adjustment_increase: "Adjustment +",
+    adjustment_decrease: "Adjustment -",
+    return_assignment: "Return Assignment",
+  };
+  return typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
 };
 
 export default function StockMovementsPage() {
@@ -72,25 +98,55 @@ export default function StockMovementsPage() {
   const [loading, setLoading] = useState(true);
   const [viewDialog, setViewDialog] = useState(null);
   const [filters, setFilters] = useState({
-    movement_type: "",
-    item_id: "",
-    location_id: "",
+    movement_type: "all",
+    item_id: "all",
+    location_id: "all",
     start_date: "",
     end_date: "",
+    reference_type: "all",
+    reference_id: "",
   });
 
   useEffect(() => {
+    // Check for URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const transferId = urlParams.get('transfer_id');
+    
+    if (transferId) {
+      // Filter by transfer reference
+      setFilters(prev => ({
+        ...prev,
+        reference_id: transferId,
+        reference_type: "transfer"
+      }));
+    }
+
     fetchMovements();
     fetchItems();
     fetchLocations();
   }, [token]);
 
+  // Auto-refetch when filters change
+  useEffect(() => {
+    if (token) {
+      fetchMovements();
+    }
+  }, [filters, token]);
+
   async function fetchMovements() {
     if (!token) return;
+    setLoading(true);
     try {
       const queryParams = new URLSearchParams();
       Object.keys(filters).forEach((key) => {
-        if (filters[key]) queryParams.append(key, filters[key]);
+        if (filters[key] && filters[key] !== "all") {
+          // Handle special movement type filtering
+          if (key === "movement_type" && filters[key] === "transfer") {
+            // Don't add to query params, we'll filter client-side for transfers
+            return;
+          }
+          queryParams.append(key, filters[key]);
+        }
       });
 
       const response = await apiClient.get(
@@ -98,8 +154,19 @@ export default function StockMovementsPage() {
         {},
         token
       );
-      setMovements(Array.isArray(response) ? response : response?.data || []);
+      
+      let movements = Array.isArray(response) ? response : response?.movements || [];
+      
+      // Client-side filtering for transfer type (includes transfer_in and transfer_out)
+      if (filters.movement_type === "transfer") {
+        movements = movements.filter(m => 
+          m.movement_type === "transfer_in" || m.movement_type === "transfer_out"
+        );
+      }
+      
+      setMovements(movements);
     } catch (error) {
+      console.error("Failed to load stock movements:", error);
       toast.error("Failed to load stock movements");
     } finally {
       setLoading(false);
@@ -109,7 +176,7 @@ export default function StockMovementsPage() {
   async function fetchItems() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/items", {}, token);
+      const response = await apiClient.get("/items", {}, token);
       setItems(
         Array.isArray(response)
           ? response
@@ -123,33 +190,39 @@ export default function StockMovementsPage() {
   async function fetchLocations() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/locations", {}, token);
+      const response = await apiClient.get("/locations", {}, token);
       setLocations(Array.isArray(response) ? response : response?.data || []);
     } catch (error) {
       console.error("Failed to load locations");
     }
   }
 
-  function handleFilter() {
-    fetchMovements();
-  }
-
   function clearFilters() {
     setFilters({
-      movement_type: "",
-      item_id: "",
-      location_id: "",
+      movement_type: "all",
+      item_id: "all",
+      location_id: "all",
       start_date: "",
       end_date: "",
+      reference_type: "all",
+      reference_id: "",
     });
-    setTimeout(() => fetchMovements(), 100);
+    // Clear URL parameters
+    window.history.replaceState({}, '', window.location.pathname);
   }
 
   const stats = {
     total: movements.length,
     purchases: movements.filter((m) => m.movement_type === "purchase").length,
     sales: movements.filter((m) => m.movement_type === "sale").length,
-    transfers: movements.filter((m) => m.movement_type === "transfer").length,
+    transfers: movements.filter((m) => 
+      m.movement_type === "transfer_in" || m.movement_type === "transfer_out"
+    ).length,
+    adjustments: movements.filter((m) => 
+      m.movement_type === "adjustment_increase" || 
+      m.movement_type === "adjustment_decrease" ||
+      m.movement_type?.includes("adjustment")
+    ).length,
   };
 
   if (loading) {
@@ -170,7 +243,7 @@ export default function StockMovementsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -215,6 +288,17 @@ export default function StockMovementsPage() {
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Adjustments</CardTitle>
+              <TrendingDown className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">
+                {stats.adjustments}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
@@ -226,7 +310,7 @@ export default function StockMovementsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-6 gap-4">
               <div>
                 <Label>Movement Type</Label>
                 <Select
@@ -239,13 +323,18 @@ export default function StockMovementsPage() {
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All types</SelectItem>
+                    <SelectItem value="all">All types</SelectItem>
                     <SelectItem value="purchase">Purchase</SelectItem>
                     <SelectItem value="sale">Sale</SelectItem>
-                    <SelectItem value="transfer">Transfer</SelectItem>
-                    <SelectItem value="adjustment">Adjustment</SelectItem>
+                    <SelectItem value="transfer">Transfer (All)</SelectItem>
+                    <SelectItem value="transfer_in">Transfer In</SelectItem>
+                    <SelectItem value="transfer_out">Transfer Out</SelectItem>
+                    <SelectItem value="adjustment_increase">Adjustment +</SelectItem>
+                    <SelectItem value="adjustment_decrease">Adjustment -</SelectItem>
                     <SelectItem value="return">Return</SelectItem>
                     <SelectItem value="damage">Damage</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                    <SelectItem value="assignment">Assignment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -259,7 +348,7 @@ export default function StockMovementsPage() {
                     <SelectValue placeholder="All items" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All items</SelectItem>
+                    <SelectItem value="all">All items</SelectItem>
                     {items.map((item) => (
                       <SelectItem key={item._id} value={item._id}>
                         {item.name}
@@ -280,12 +369,33 @@ export default function StockMovementsPage() {
                     <SelectValue placeholder="All locations" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All locations</SelectItem>
+                    <SelectItem value="all">All locations</SelectItem>
                     {locations.map((loc) => (
                       <SelectItem key={loc._id} value={loc._id}>
                         {loc.name}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Reference Type</Label>
+                <Select
+                  value={filters.reference_type}
+                  onValueChange={(v) =>
+                    setFilters({ ...filters, reference_type: v })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All references" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All references</SelectItem>
+                    <SelectItem value="transfer">Transfer</SelectItem>
+                    <SelectItem value="purchase_order">Purchase Order</SelectItem>
+                    <SelectItem value="sale_order">Sale Order</SelectItem>
+                    <SelectItem value="adjustment">Adjustment</SelectItem>
+                    <SelectItem value="assignment">Assignment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -311,13 +421,29 @@ export default function StockMovementsPage() {
               </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleFilter}>Apply Filters</Button>
               <Button variant="outline" onClick={clearFilters}>
-                Clear Filters
+                Clear All Filters
               </Button>
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <span>Showing {movements.length} movements</span>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Debug Info */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">
+                <p>Debug Info:</p>
+                <p>Total movements: {movements.length}</p>
+                <p>Current filters: {JSON.stringify(filters)}</p>
+                <p>Loading: {loading.toString()}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Movements Table */}
         <Card>
@@ -360,7 +486,7 @@ export default function StockMovementsPage() {
                             variant="outline"
                           >
                             <Icon className="mr-1 h-3 w-3" />
-                            {movement.movement_type}
+                            {formatMovementType(movement.movement_type)}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium">
@@ -379,10 +505,15 @@ export default function StockMovementsPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {movement.location_id?.name || "N/A"}
+                          {movement.movement_type === "transfer_out" 
+                            ? `From: ${movement.from_location_id?.name || "N/A"}`
+                            : movement.movement_type === "transfer_in"
+                            ? `To: ${movement.to_location_id?.name || "N/A"}`
+                            : movement.location_id?.name || movement.to_location_id?.name || movement.from_location_id?.name || "N/A"
+                          }
                         </TableCell>
                         <TableCell className="font-mono text-xs">
-                          {movement.reference || "N/A"}
+                          {movement.reference_number || movement.reference || "N/A"}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -431,7 +562,7 @@ export default function StockMovementsPage() {
                         className={movementTypeColors[viewDialog.movement_type]}
                         variant="outline"
                       >
-                        {viewDialog.movement_type}
+                        {formatMovementType(viewDialog.movement_type)}
                       </Badge>
                     </div>
                   </div>
@@ -471,9 +602,21 @@ export default function StockMovementsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Location</Label>
+                    <Label className="text-muted-foreground">
+                      {viewDialog.movement_type === "transfer_out" 
+                        ? "From Location"
+                        : viewDialog.movement_type === "transfer_in"
+                        ? "To Location" 
+                        : "Location"
+                      }
+                    </Label>
                     <p className="mt-1">
-                      {viewDialog.location_id?.name || "N/A"}
+                      {viewDialog.movement_type === "transfer_out" 
+                        ? viewDialog.from_location_id?.name || "N/A"
+                        : viewDialog.movement_type === "transfer_in"
+                        ? viewDialog.to_location_id?.name || "N/A"
+                        : viewDialog.location_id?.name || viewDialog.to_location_id?.name || viewDialog.from_location_id?.name || "N/A"
+                      }
                     </p>
                   </div>
                   <div>
@@ -486,10 +629,27 @@ export default function StockMovementsPage() {
                   </div>
                 </div>
 
-                {viewDialog.reference && (
+                {(viewDialog.reference_number || viewDialog.reference) && (
                   <div>
-                    <Label className="text-muted-foreground">Reference</Label>
-                    <p className="font-mono mt-1">{viewDialog.reference}</p>
+                    <Label className="text-muted-foreground">
+                      Reference
+                      {viewDialog.reference_type === "transfer" && " (Transfer)"}
+                    </Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="font-mono">{viewDialog.reference_number || viewDialog.reference}</p>
+                      {viewDialog.reference_type === "transfer" && viewDialog.reference_id && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            // Navigate to stock transfers page with this transfer
+                            window.location.href = `/stock-transfers?highlight=${viewDialog.reference_id}`;
+                          }}
+                        >
+                          View Transfer
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
 

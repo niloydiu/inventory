@@ -4,7 +4,6 @@ const stockTransferSchema = new mongoose.Schema(
   {
     transfer_number: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
     },
@@ -120,7 +119,7 @@ stockTransferSchema.index({ request_date: -1 });
 
 // Auto-generate transfer number
 stockTransferSchema.pre("save", async function () {
-  if (this.isNew && !this.transfer_number) {
+  if (!this.transfer_number) {
     const count = await this.constructor.countDocuments();
     const date = new Date();
     const year = date.getFullYear();

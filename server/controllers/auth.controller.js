@@ -170,6 +170,40 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
+// Logout
+exports.logout = async (req, res) => {
+  try {
+    console.log("[Auth Controller] Logout request");
+
+    // Clear the httpOnly cookie
+    res.clearCookie("inventory_auth_token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
+
+    // Set cache-control headers to prevent caching
+    res.set({
+      "Cache-Control": "no-store, no-cache, must-revalidate, private",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
+
+    console.log("[Auth Controller] Logout successful");
+    res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to logout",
+    });
+  }
+};
+
 // Refresh token
 exports.refreshToken = async (req, res) => {
   try {
