@@ -84,11 +84,15 @@ export default function ApprovalsPage() {
       ]);
 
       if (allResult.success) {
-        setApprovals(allResult.data);
+        // Ensure approvals is always an array
+        const approvalsData = allResult.data;
+        setApprovals(Array.isArray(approvalsData) ? approvalsData : []);
       }
 
       if (pendingResult.success) {
-        setPending(pendingResult.data);
+        // Ensure pending is always an array
+        const pendingData = pendingResult.data;
+        setPending(Array.isArray(pendingData) ? pendingData : []);
       }
     } catch (error) {
       toast.error("Failed to load approvals");
@@ -199,10 +203,10 @@ export default function ApprovalsPage() {
           <Button
             onClick={() => {
               setFormDialog("new");
-              setFormData({ 
-                status: "pending", 
+              setFormData({
+                status: "pending",
                 priority: "medium",
-                request_type: "purchase"
+                request_type: "purchase",
               });
             }}
           >
