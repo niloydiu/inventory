@@ -92,7 +92,7 @@ export default function PurchaseOrdersPage() {
   async function fetchSuppliers() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/suppliers", {}, token);
+      const response = await apiClient.get("/suppliers", {}, token);
       setSuppliers(Array.isArray(response) ? response : response?.data || []);
     } catch (error) {
       console.error("Failed to load suppliers");
@@ -102,7 +102,7 @@ export default function PurchaseOrdersPage() {
   async function fetchItems() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/items", {}, token);
+      const response = await apiClient.get("/items", {}, token);
       setItems(
         Array.isArray(response)
           ? response
@@ -185,13 +185,21 @@ export default function PurchaseOrdersPage() {
       order_date: po.order_date
         ? format(new Date(po.order_date), "yyyy-MM-dd")
         : "",
-      expected_delivery: po.expected_delivery
-        ? format(new Date(po.expected_delivery), "yyyy-MM-dd")
+      expected_delivery: po.expected_delivery_date || po.expected_delivery
+        ? format(new Date(po.expected_delivery_date || po.expected_delivery), "yyyy-MM-dd")
         : "",
       currency: po.currency || "USD",
       notes: po.notes || "",
     });
-    setPoItems(po.items || []);
+    
+    // Transform items from backend format to frontend format
+    const transformedItems = (po.items || []).map(item => ({
+      item_id: item.item_id?._id || item.item_id,
+      quantity: item.quantity_ordered || item.quantity || 0,
+      unit_price: item.unit_price || 0
+    }));
+    
+    setPoItems(transformedItems);
   }
 
   function addPoItem() {

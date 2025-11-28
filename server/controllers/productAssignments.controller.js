@@ -5,9 +5,14 @@ const { paginatedQuery } = require("../utils/queryHelpers");
 // Get all product assignments with pagination and filters
 exports.getAllAssignments = async (req, res) => {
   try {
+    // Clean the query to remove cache-busting parameters
+    const cleanQuery = { ...req.query };
+    delete cleanQuery._t;
+    delete cleanQuery._;
+    
     const result = await paginatedQuery(
       ProductAssignment,
-      req.query,
+      cleanQuery,
       [
         "purpose",
         "issue_remarks",

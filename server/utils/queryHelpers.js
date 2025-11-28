@@ -103,7 +103,7 @@ exports.buildFilterObject = (filters) => {
       }
     }
   });
-
+  
   return filterObj;
 };
 
@@ -175,5 +175,18 @@ exports.paginatedQuery = async (
     Model.countDocuments(filter),
   ]);
 
-  return exports.buildPaginatedResponse(data, total, page, limit);
+  const totalPages = Math.ceil(total / limit);
+
+  // Return flat structure expected by controllers
+  return {
+    data,
+    total,
+    page,
+    pages: totalPages,
+    limit,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1,
+    nextPage: page < totalPages ? page + 1 : null,
+    prevPage: page > 1 ? page - 1 : null,
+  };
 };

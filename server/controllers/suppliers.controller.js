@@ -5,7 +5,12 @@ const { paginatedQuery } = require("../utils/queryHelpers");
 // Get all suppliers with pagination and filtering
 exports.getAllSuppliers = async (req, res) => {
   try {
-    const result = await paginatedQuery(Supplier, req.query, [
+    // Clean the query to remove cache-busting parameters
+    const cleanQuery = { ...req.query };
+    delete cleanQuery._t;
+    delete cleanQuery._;
+    
+    const result = await paginatedQuery(Supplier, cleanQuery, [
       "name",
       "supplier_code",
       "email",
@@ -65,7 +70,7 @@ exports.createSupplier = async (req, res) => {
 
     const supplier = new Supplier({
       ...req.body,
-      created_by: req.user.userId,
+      created_by: req.user.user_id,
     });
 
     await supplier.save();
@@ -103,7 +108,7 @@ exports.updateSupplier = async (req, res) => {
 
     const supplier = await Supplier.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updated_by: req.user.userId },
+      { ...req.body, updated_by: req.user.user_id },
       { new: true, runValidators: true }
     );
 

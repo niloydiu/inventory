@@ -4,9 +4,14 @@ const { paginatedQuery } = require("../utils/queryHelpers");
 // Get all items with pagination
 exports.getAllItems = async (req, res) => {
   try {
+    // Clean the query to remove cache-busting parameters
+    const cleanQuery = { ...req.query };
+    delete cleanQuery._t; // Remove cache-busting timestamp
+    delete cleanQuery._; // Remove other cache-busting parameters
+    
     const result = await paginatedQuery(
       Item,
-      req.query,
+      cleanQuery,
       ["name", "description", "sku", "barcode"],
       "category"
     );
