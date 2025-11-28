@@ -8,7 +8,6 @@ import {
   approveRequest,
   rejectRequest,
   createApproval,
-  updateApproval,
   deleteApproval,
 } from "@/lib/actions/approvals.actions";
 import {

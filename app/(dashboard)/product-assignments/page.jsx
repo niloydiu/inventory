@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 import { DetailViewDialog } from "@/components/ui/detail-view-dialog";
 import api from "@/lib/api-client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export default function ProductAssignmentsPage() {
   const [assignments, setAssignments] = useState([]);
@@ -66,7 +66,6 @@ export default function ProductAssignmentsPage() {
     total: 0,
     totalPages: 0,
   });
-  const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     item_id: "",
@@ -112,11 +111,7 @@ export default function ProductAssignmentsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch assignments:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load assignments",
-        variant: "destructive",
-      });
+      toast.error("Failed to load assignments");
     } finally {
       setLoading(false);
     }
@@ -160,21 +155,14 @@ export default function ProductAssignmentsPage() {
     try {
       const response = await api.post("/product-assignments", formData);
       if (response.success) {
-        toast({
-          title: "Success",
-          description: "Product assigned successfully",
-        });
+        toast.success("Product assigned successfully");
         setShowAssignDialog(false);
         resetForm();
         fetchAssignments();
         fetchStats();
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to assign product",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to assign product");
     }
   };
 
@@ -186,10 +174,7 @@ export default function ProductAssignmentsPage() {
         returnData
       );
       if (response.success) {
-        toast({
-          title: "Success",
-          description: "Product returned successfully",
-        });
+        toast.success("Product returned successfully");
         setShowReturnDialog(false);
         setReturnData({
           condition_on_return: "good",
@@ -200,11 +185,7 @@ export default function ProductAssignmentsPage() {
         fetchStats();
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to return product",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to return product");
     }
   };
 
@@ -215,18 +196,11 @@ export default function ProductAssignmentsPage() {
         { signature: "Digital Signature" }
       );
       if (response.success) {
-        toast({
-          title: "Success",
-          description: "Assignment acknowledged",
-        });
+        toast.success("Assignment acknowledged");
         fetchAssignments();
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to acknowledge",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to acknowledge");
     }
   };
 
@@ -236,19 +210,12 @@ export default function ProductAssignmentsPage() {
     try {
       const response = await api.delete(`/product-assignments/${id}`);
       if (response.success) {
-        toast({
-          title: "Success",
-          description: "Assignment deleted successfully",
-        });
+        toast.success("Assignment deleted successfully");
         fetchAssignments();
         fetchStats();
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete assignment",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to delete assignment");
     }
   };
 
