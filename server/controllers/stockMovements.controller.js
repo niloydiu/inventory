@@ -24,9 +24,12 @@ exports.getAllMovements = async (req, res) => {
       query.item_id = item_id;
     }
 
-    // Filter by location
+    // Filter by location (check both from and to locations for transfers)
     if (location_id) {
-      query.location_id = location_id;
+      query.$or = [
+        { from_location_id: location_id },
+        { to_location_id: location_id }
+      ];
     }
 
     // Filter by movement type
@@ -39,26 +42,46 @@ exports.getAllMovements = async (req, res) => {
       query.reference_type = reference_type;
     }
 
-    // Filter by date range
+    // Filter by date range (use created_at since movement_date is just an alias)
     if (start_date || end_date) {
       query.created_at = {};
-      if (start_date) query.created_at.$gte = new Date(start_date);
-      if (end_date) query.created_at.$lte = new Date(end_date);
+      if (start_date) {
+        // Set start of day for start_date
+        const startDate = new Date(start_date);
+        startDate.setHours(0, 0, 0, 0);
+        query.created_at.$gte = startDate;
+      }
+      if (end_date) {
+        // Set end of day for end_date
+        const endDate = new Date(end_date);
+        endDate.setHours(23, 59, 59, 999);
+        query.created_at.$lte = endDate;
+      }
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const [movements, total] = await Promise.all([
+    const [rawMovements, total] = await Promise.all([
       StockMovement.find(query)
         .populate("item_id", "name sku")
-        .populate("location_id", "name code")
-        .populate("created_by", "full_name email")
+        .populate("from_location_id", "name code")
+        .populate("to_location_id", "name code")
+        .populate("performed_by", "full_name email")
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit))
         .lean(),
       StockMovement.countDocuments(query),
     ]);
+
+    // Transform data to match frontend expectations
+    const movements = rawMovements.map(movement => ({
+      ...movement,
+      movement_date: movement.created_at,
+      quantity_change: movement.quantity,
+      quantity_after: movement.balance_after,
+      location_id: movement.to_location_id || movement.from_location_id, // For backward compatibility
+    }));
 
     res.json({
       movements,
@@ -177,7 +200,7 @@ exports.createMovement = async (req, res) => {
       quantity_after: item.quantity,
       reason,
       notes,
-      created_by: req.user.userId,
+      created_by: req.user.user_id,
     });
 
     await movement.save();

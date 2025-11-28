@@ -43,17 +43,20 @@ import {
   Trash,
   Eye,
   Truck,
+  Package,
   CheckCircle,
   XCircle,
+  Activity,
 } from "lucide-react";
 import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
 
 const statusColors = {
+  draft: "bg-gray-100 text-gray-800",
   pending: "bg-yellow-100 text-yellow-800",
-  approved: "bg-blue-100 text-blue-800",
   in_transit: "bg-purple-100 text-purple-800",
-  completed: "bg-green-100 text-green-800",
+  partially_received: "bg-blue-100 text-blue-800",
+  received: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };
 
@@ -78,8 +81,10 @@ export default function StockTransfersPage() {
     if (!token) return;
     try {
       const response = await apiClient.get("/stock-transfers", {}, token);
-      setTransfers(Array.isArray(response) ? response : response?.data || []);
+      console.log("[Stock Transfers] API Response:", response);
+      setTransfers(Array.isArray(response) ? response : response?.transfers || []);
     } catch (error) {
+      console.error("Failed to load stock transfers:", error);
       toast.error("Failed to load stock transfers");
     } finally {
       setLoading(false);
@@ -99,7 +104,7 @@ export default function StockTransfersPage() {
   async function fetchItems() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/items", {}, token);
+      const response = await apiClient.get("/items", {}, token);
       setItems(
         Array.isArray(response)
           ? response
@@ -112,9 +117,15 @@ export default function StockTransfersPage() {
 
   async function handleSubmit() {
     try {
+      // Transform items to match backend expectations
+      const transformedItems = transferItems.map(item => ({
+        item_id: item.item_id,
+        quantity_sent: item.quantity
+      }));
+      
       const dataToSubmit = {
         ...formData,
-        items: transferItems,
+        items: transformedItems,
         created_by: user?.userId,
       };
 
@@ -160,13 +171,44 @@ export default function StockTransfersPage() {
     }
   }
 
-  async function handleComplete(id) {
+  async function handleShip(id) {
     try {
-      await apiClient.post(`/stock-transfers/${id}/complete`, {}, token);
-      toast.success("Transfer completed");
+      await apiClient.post(`/stock-transfers/${id}/ship`, {}, token);
+      toast.success("Transfer shipped");
       fetchTransfers();
     } catch (error) {
-      toast.error("Failed to complete transfer");
+      toast.error("Failed to ship transfer");
+    }
+  }
+
+  async function handleReceive(id) {
+    try {
+      // Get transfer details to create received_items array
+      const transfer = transfers.find(t => t._id === id);
+      const received_items = transfer.items.map(item => ({
+        item_id: item.item_id._id || item.item_id,
+        quantity_received: item.quantity_sent || item.quantity_requested
+      }));
+      
+      await apiClient.post(`/stock-transfers/${id}/receive`, {
+        received_items,
+        received_date: new Date().toISOString()
+      }, token);
+      toast.success("Transfer received");
+      fetchTransfers();
+    } catch (error) {
+      toast.error("Failed to receive transfer");
+    }
+  }
+
+  async function handleCancel(id) {
+    if (!confirm("Are you sure you want to cancel this transfer?")) return;
+    try {
+      await apiClient.post(`/stock-transfers/${id}/cancel`, {}, token);
+      toast.success("Transfer cancelled");
+      fetchTransfers();
+    } catch (error) {
+      toast.error("Failed to cancel transfer");
     }
   }
 
@@ -175,12 +217,18 @@ export default function StockTransfersPage() {
     setFormData({
       from_location_id: transfer.from_location_id?._id || "",
       to_location_id: transfer.to_location_id?._id || "",
-      transfer_date: transfer.transfer_date
-        ? format(new Date(transfer.transfer_date), "yyyy-MM-dd")
+      transfer_date: transfer.request_date
+        ? format(new Date(transfer.request_date), "yyyy-MM-dd")
         : "",
       notes: transfer.notes || "",
+      status: transfer.status || "",
     });
-    setTransferItems(transfer.items || []);
+    // Transform items back to frontend format
+    const frontendItems = (transfer.items || []).map(item => ({
+      item_id: item.item_id?._id || item.item_id,
+      quantity: item.quantity_sent || item.quantity_requested || 1,
+    }));
+    setTransferItems(frontendItems);
   }
 
   function addTransferItem() {
@@ -221,8 +269,8 @@ export default function StockTransfersPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-5">
-          {["pending", "approved", "in_transit", "completed", "cancelled"].map(
+        <div className="grid gap-4 md:grid-cols-6">
+          {["draft", "pending", "in_transit", "partially_received", "received", "cancelled"].map(
             (status) => (
               <Card key={status}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -273,9 +321,9 @@ export default function StockTransfersPage() {
                         {transfer.to_location_id?.name || "N/A"}
                       </TableCell>
                       <TableCell>
-                        {transfer.transfer_date
+                        {transfer.request_date
                           ? format(
-                              new Date(transfer.transfer_date),
+                              new Date(transfer.request_date),
                               "MMM dd, yyyy"
                             )
                           : "N/A"}
@@ -298,12 +346,15 @@ export default function StockTransfersPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          
+                          {/* Pending status: can approve or edit */}
                           {transfer.status === "pending" && (
                             <>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleApprove(transfer._id)}
+                                title="Approve"
                               >
                                 <CheckCircle className="h-4 w-4 text-green-600" />
                               </Button>
@@ -311,27 +362,72 @@ export default function StockTransfersPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => openEditDialog(transfer)}
+                                title="Edit"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </>
                           )}
+                          
+                          {/* Draft status: can edit */}
+                          {transfer.status === "draft" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(transfer)}
+                              title="Edit"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                          {/* Approved status: can ship */}
+                          {(transfer.status === "approved" || transfer.status === "pending") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleShip(transfer._id)}
+                              title="Ship"
+                            >
+                              <Truck className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          )}
+
+                          {/* In Transit status: can receive */}
                           {transfer.status === "in_transit" && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleComplete(transfer._id)}
+                              onClick={() => handleReceive(transfer._id)}
+                              title="Receive"
                             >
-                              <CheckCircle className="h-4 w-4 text-blue-600" />
+                              <Package className="h-4 w-4 text-purple-600" />
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(transfer._id)}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
+
+                          {/* Can cancel if not received */}
+                          {!["received", "cancelled"].includes(transfer.status) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCancel(transfer._id)}
+                              title="Cancel"
+                            >
+                              <XCircle className="h-4 w-4 text-red-600" />
+                            </Button>
+                          )}
+
+                          {/* Can delete if draft or cancelled */}
+                          {["draft", "cancelled"].includes(transfer.status) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(transfer._id)}
+                              title="Delete"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -385,8 +481,8 @@ export default function StockTransfersPage() {
                       Transfer Date
                     </Label>
                     <p>
-                      {viewDialog.transfer_date
-                        ? format(new Date(viewDialog.transfer_date), "PPP")
+                      {viewDialog.request_date
+                        ? format(new Date(viewDialog.request_date), "PPP")
                         : "N/A"}
                     </p>
                   </div>
@@ -427,6 +523,19 @@ export default function StockTransfersPage() {
                     <p className="whitespace-pre-wrap">{viewDialog.notes}</p>
                   </div>
                 )}
+
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      // Navigate to stock movements page filtered by this transfer
+                      window.location.href = `/stock-movements?transfer_id=${viewDialog._id}`;
+                    }}
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    View Related Movements
+                  </Button>
+                </div>
               </div>
             )}
           </DialogContent>

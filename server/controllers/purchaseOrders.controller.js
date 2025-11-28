@@ -49,9 +49,10 @@ exports.getAllPurchaseOrders = async (req, res) => {
     const [orders, total] = await Promise.all([
       PurchaseOrder.find(query)
         .populate("supplier_id", "name supplier_code email phone")
-        .populate("location_id", "name code")
+        .populate("delivery_location_id", "name code")
         .populate("approved_by", "full_name email")
         .populate("created_by", "full_name email")
+        .populate("items.item_id", "name sku")
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit))
@@ -60,7 +61,11 @@ exports.getAllPurchaseOrders = async (req, res) => {
     ]);
 
     res.json({
-      purchase_orders: orders,
+      success: true,
+      data: orders.map(order => ({
+        ...order,
+        expected_delivery: order.expected_delivery_date
+      })),
       pagination: {
         current_page: parseInt(page),
         total_pages: Math.ceil(total / parseInt(limit)),
@@ -79,7 +84,7 @@ exports.getPurchaseOrderById = async (req, res) => {
   try {
     const order = await PurchaseOrder.findById(req.params.id)
       .populate("supplier_id")
-      .populate("location_id")
+      .populate("delivery_location_id")
       .populate("items.item_id", "name sku description")
       .populate("approved_by", "full_name email")
       .populate("created_by", "full_name email");
@@ -88,7 +93,19 @@ exports.getPurchaseOrderById = async (req, res) => {
       return res.status(404).json({ message: "Purchase order not found" });
     }
 
-    res.json(order);
+    // Transform backend data to frontend format
+    const transformedOrder = {
+      ...order.toObject(),
+      expected_delivery: order.expected_delivery_date,
+      items: order.items.map(item => ({
+        item_id: item.item_id,
+        quantity: item.quantity_ordered,
+        unit_price: item.unit_price,
+        total: item.total
+      }))
+    };
+
+    res.json({ success: true, data: transformedOrder });
   } catch (error) {
     console.error("[PO Controller] Error getting purchase order:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -103,17 +120,69 @@ exports.createPurchaseOrder = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
+    console.log('[PO Controller] Creating purchase order with data:', req.body);
+
+    // Transform frontend data to match model schema
+    const orderData = { ...req.body };
+    
+    // Transform items array to match model schema
+    if (orderData.items && Array.isArray(orderData.items)) {
+      console.log('[PO Controller] Original items:', orderData.items);
+      orderData.items = orderData.items.map(item => {
+        const transformedItem = {
+          item_id: item.item_id,
+          quantity_ordered: Number(item.quantity) || 0,
+          unit_price: Number(item.unit_price) || 0,
+          total: (Number(item.quantity) || 0) * (Number(item.unit_price) || 0),
+          quantity_received: 0,
+          tax_rate: Number(item.tax_rate) || 0,
+          discount: Number(item.discount) || 0
+        };
+        console.log('[PO Controller] Transformed item:', transformedItem);
+        return transformedItem;
+      });
+      console.log('[PO Controller] All transformed items:', orderData.items);
+    }
+
+    // Calculate subtotal and totals
+    const subtotal = orderData.items?.reduce((sum, item) => sum + (item.total || 0), 0) || 0;
+    orderData.subtotal = subtotal;
+    
+    // If total_amount not provided, calculate it
+    if (!orderData.total_amount) {
+      orderData.total_amount = subtotal + (orderData.tax_amount || 0) + (orderData.shipping_cost || 0) - (orderData.discount_amount || 0);
+    }
+
+    // Map expected_delivery to expected_delivery_date if needed
+    if (orderData.expected_delivery && !orderData.expected_delivery_date) {
+      orderData.expected_delivery_date = new Date(orderData.expected_delivery);
+    }
+
+    // Convert order_date to Date object if it's a string
+    if (orderData.order_date && typeof orderData.order_date === 'string') {
+      orderData.order_date = new Date(orderData.order_date);
+    }
+
+    // Remove the po_number field to let the pre-save hook generate it
+    delete orderData.po_number;
+
+    console.log('[PO Controller] Final transformed order data:', JSON.stringify(orderData, null, 2));
+
     const order = new PurchaseOrder({
-      ...req.body,
-      created_by: req.user.userId,
+      ...orderData,
+      created_by: req.user.user_id,
     });
 
+    console.log('[PO Controller] Order object before save:', JSON.stringify(order.toObject(), null, 2));
+
     await order.save();
+
+    console.log('[PO Controller] Order saved successfully with PO number:', order.po_number);
 
     // Populate fields for response
     await order.populate([
       { path: "supplier_id", select: "name supplier_code email" },
-      { path: "location_id", select: "name code" },
+      { path: "delivery_location_id", select: "name code" },
       { path: "items.item_id", select: "name sku" },
     ]);
 
@@ -148,12 +217,51 @@ exports.updatePurchaseOrder = async (req, res) => {
       });
     }
 
-    Object.assign(order, req.body);
+    console.log('[PO Controller] Updating purchase order with data:', req.body);
+
+    // Transform frontend data to match model schema
+    const updateData = { ...req.body };
+    
+    // Transform items array to match model schema
+    if (updateData.items && Array.isArray(updateData.items)) {
+      updateData.items = updateData.items.map(item => ({
+        item_id: item.item_id,
+        quantity_ordered: Number(item.quantity) || 0,
+        unit_price: Number(item.unit_price) || 0,
+        total: (Number(item.quantity) || 0) * (Number(item.unit_price) || 0),
+        quantity_received: item.quantity_received || 0,
+        tax_rate: Number(item.tax_rate) || 0,
+        discount: Number(item.discount) || 0
+      }));
+    }
+
+    // Calculate subtotal and totals
+    if (updateData.items) {
+      const subtotal = updateData.items.reduce((sum, item) => sum + (item.total || 0), 0);
+      updateData.subtotal = subtotal;
+      
+      // If total_amount not provided, calculate it
+      if (!updateData.total_amount) {
+        updateData.total_amount = subtotal + (updateData.tax_amount || 0) + (updateData.shipping_cost || 0) - (updateData.discount_amount || 0);
+      }
+    }
+
+    // Map expected_delivery to expected_delivery_date if needed
+    if (updateData.expected_delivery && !updateData.expected_delivery_date) {
+      updateData.expected_delivery_date = new Date(updateData.expected_delivery);
+    }
+
+    // Convert order_date to Date object if it's a string
+    if (updateData.order_date && typeof updateData.order_date === 'string') {
+      updateData.order_date = new Date(updateData.order_date);
+    }
+
+    Object.assign(order, updateData);
     await order.save();
 
     await order.populate([
       { path: "supplier_id", select: "name supplier_code email" },
-      { path: "location_id", select: "name code" },
+      { path: "delivery_location_id", select: "name code" },
       { path: "items.item_id", select: "name sku" },
     ]);
 
@@ -183,7 +291,7 @@ exports.approvePurchaseOrder = async (req, res) => {
     }
 
     order.status = "approved";
-    order.approved_by = req.user.userId;
+    order.approved_by = req.user.user_id;
     order.approved_date = new Date();
 
     await order.save();
@@ -244,7 +352,7 @@ exports.receivePurchaseOrder = async (req, res) => {
           reference_type: "PurchaseOrder",
           reference_id: order._id,
           notes: `Received from PO: ${order.po_number}`,
-          created_by: req.user.userId,
+          created_by: req.user.user_id,
         });
       }
     }
@@ -298,6 +406,33 @@ exports.cancelPurchaseOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("[PO Controller] Error cancelling purchase order:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Delete purchase order
+exports.deletePurchaseOrder = async (req, res) => {
+  try {
+    const order = await PurchaseOrder.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Purchase order not found" });
+    }
+
+    // Only allow deletion of draft or pending orders
+    if (order.status === "received" || order.status === "approved" || order.status === "ordered") {
+      return res.status(400).json({
+        message: `Cannot delete purchase order with status: ${order.status}`,
+      });
+    }
+
+    await PurchaseOrder.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: "Purchase order deleted successfully",
+    });
+  } catch (error) {
+    console.error("[PO Controller] Error deleting purchase order:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

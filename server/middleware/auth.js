@@ -16,6 +16,10 @@ if (process.env.NODE_ENV === 'production' && JWT_SECRET.length < 32) {
 
 const authMiddleware = async (req, res, next) => {
   try {
+    console.log('[Auth Debug] Starting auth middleware');
+    console.log('[Auth Debug] Headers:', req.headers.authorization ? 'Bearer token present' : 'No Bearer token');
+    console.log('[Auth Debug] Cookies:', req.cookies.inventory_auth_token ? 'Cookie present' : 'No cookie');
+    
     // Check cookie first, then Authorization header
     const token = req.cookies.inventory_auth_token || 
                   (req.headers.authorization?.startsWith('Bearer ') 
@@ -23,6 +27,7 @@ const authMiddleware = async (req, res, next) => {
                     : null);
 
     if (!token) {
+      console.log('[Auth Debug] No token found');
       return res.status(401).json({
         success: false,
         message: 'No token provided'
@@ -31,9 +36,11 @@ const authMiddleware = async (req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
+      console.log('[Auth Debug] Token decoded successfully:', { userId: decoded.user_id, username: decoded.username, role: decoded.role });
       req.user = decoded;
       next();
     } catch (error) {
+      console.log('[Auth Debug] Token verification failed:', error.message);
       if (error.name === 'TokenExpiredError') {
         return res.status(401).json({
           success: false,
@@ -54,22 +61,32 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-const requireRole = (...allowedRoles) => {
+const requireRole = (allowedRoles) => {
   return (req, res, next) => {
+    console.log('[Auth] requireRole middleware called');
+    console.log('[Auth] req.user:', req.user);
+    console.log('[Auth] allowedRoles:', allowedRoles);
+    
     if (!req.user) {
+      console.log('[Auth] No user found in request');
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
       });
     }
 
+    console.log('[Auth] User role:', req.user.role);
+    console.log('[Auth] Role check:', allowedRoles.includes(req.user.role));
+
     if (!allowedRoles.includes(req.user.role)) {
+      console.log('[Auth] Role check failed - insufficient permissions');
       return res.status(403).json({
         success: false,
         message: 'Insufficient permissions'
       });
     }
 
+    console.log('[Auth] Role authorization passed');
     next();
   };
 };
