@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { Button } from "@/components/ui/button"
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -9,28 +9,34 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
-const roles = ["admin", "manager", "employee"]
+const roles = ["admin", "manager", "employee"];
 
-export function UserForm({ defaultValues, onSubmit, isLoading, isEdit = false }) {
+export function UserForm({
+  defaultValues,
+  onSubmit,
+  isLoading,
+  isEdit = false,
+}) {
   const form = useForm({
     defaultValues: defaultValues || {
       username: "",
       email: "",
       full_name: "",
       role: "employee",
+      password: "",
     },
-  })
+  });
 
   return (
     <Form {...form}>
@@ -42,13 +48,17 @@ export function UserForm({ defaultValues, onSubmit, isLoading, isEdit = false })
             <FormItem>
               <FormLabel>Username *</FormLabel>
               <FormControl>
-                <Input placeholder="Enter username" {...field} disabled={isEdit} />
+                <Input
+                  placeholder="Enter username"
+                  {...field}
+                  disabled={isEdit}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="email"
@@ -62,7 +72,27 @@ export function UserForm({ defaultValues, onSubmit, isLoading, isEdit = false })
             </FormItem>
           )}
         />
-        
+
+        {!isEdit && (
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Enter password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <FormField
           control={form.control}
           name="full_name"
@@ -76,7 +106,7 @@ export function UserForm({ defaultValues, onSubmit, isLoading, isEdit = false })
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="role"
@@ -101,12 +131,12 @@ export function UserForm({ defaultValues, onSubmit, isLoading, isEdit = false })
             </FormItem>
           )}
         />
-        
+
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEdit ? "Update User" : "Update User"}
+          {isEdit ? "Update User" : "Create User"}
         </Button>
       </form>
     </Form>
-  )
+  );
 }
