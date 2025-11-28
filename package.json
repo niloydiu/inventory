@@ -8,6 +8,8 @@
     "dev:api": "node server/index.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
+    "start:api": "NODE_ENV=production node server/index.js",
+    "start:frontend": "NODE_ENV=production node next-server.js",
     "lint": "eslint",
     "db:seed": "node server/seed.js",
     "db:seed:realistic": "node server/seed-realistic.js",
