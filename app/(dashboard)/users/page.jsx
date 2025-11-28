@@ -1,84 +1,96 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useAuth } from "@/lib/auth-context"
-import { getAllUsers, updateUser, deleteUser } from "@/lib/actions/users.actions"
-import { UserTable } from "@/components/users/user-table"
-import { UserForm } from "@/components/users/user-form"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { toast } from "sonner"
-import { Plus } from "lucide-react"
-import Link from "next/link"
+import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import {
+  getAllUsers,
+  updateUser,
+  deleteUser,
+} from "@/lib/actions/users.actions";
+import { UserTable } from "@/components/users/user-table";
+import { UserForm } from "@/components/users/user-form";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 
 export default function UsersPage() {
-  const { token, user } = useAuth()
-  const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [editDialog, setEditDialog] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { token, user } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editDialog, setEditDialog] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role === "admin";
 
   useEffect(() => {
-    fetchUsers()
-  }, [token])
+    fetchUsers();
+  }, [token]);
 
   async function fetchUsers() {
-    if (!token) return
-    
+    if (!token) return;
+
     try {
-      const result = await getAllUsers(token)
+      const result = await getAllUsers(token);
       if (result.success) {
-        setUsers(result.data)
+        setUsers(result.data);
       } else {
-        toast.error(result.error || "Failed to load users")
+        toast.error(result.error || "Failed to load users");
       }
     } catch (error) {
-      toast.error("Failed to load users")
+      toast.error("Failed to load users");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function handleEdit(formData) {
-    if (!editDialog) return
-    
-    setIsSubmitting(true)
+    if (!editDialog) return;
+
+    setIsSubmitting(true);
     try {
-      const result = await updateUser(editDialog._id, formData, token)
+      const result = await updateUser(editDialog._id, formData, token);
       if (result.success) {
-        toast.success("User updated successfully")
-        setEditDialog(null)
-        fetchUsers()
+        toast.success("User updated successfully");
+        setEditDialog(null);
+        fetchUsers();
       } else {
-        toast.error(result.error || "Failed to update user")
+        toast.error(result.error || "Failed to update user");
       }
     } catch (error) {
-      toast.error("Failed to update user")
+      toast.error("Failed to update user");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this user?")) return
-    
+    if (!confirm("Are you sure you want to delete this user?")) return;
+
     try {
-      const result = await deleteUser(id, token)
+      const result = await deleteUser(id, token);
       if (result.success) {
-        toast.success("User deleted successfully")
-        fetchUsers()
+        toast.success("User deleted successfully");
+        fetchUsers();
       } else {
-        toast.error(result.error || "Failed to delete user")
+        toast.error(result.error || "Failed to delete user");
       }
     } catch (error) {
-      toast.error("Failed to delete user")
+      toast.error("Failed to delete user");
     }
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>
+    return (
+      <div className="flex items-center justify-center h-full">Loading...</div>
+    );
   }
 
   return (
@@ -88,28 +100,26 @@ export default function UsersPage() {
           <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
           {isAdmin && (
             <Button asChild>
-              <Link href="/register">
+              <Link href="/users/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Add User
               </Link>
             </Button>
           )}
         </div>
-        
-        <UserTable 
+
+        <UserTable
           users={users}
           onEdit={(user) => setEditDialog(user)}
           onDelete={handleDelete}
           currentUserId={user?.user_id}
         />
-        
+
         <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>
-                Update user information
-              </DialogDescription>
+              <DialogDescription>Update user information</DialogDescription>
             </DialogHeader>
             <UserForm
               defaultValues={editDialog}
@@ -121,5 +131,5 @@ export default function UsersPage() {
         </Dialog>
       </div>
     </div>
-  )
+  );
 }
