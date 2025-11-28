@@ -60,11 +60,72 @@ exports.createAssignment = async (req, res) => {
       expected_return_date,
     } = req.body;
 
+    console.log("Create assignment request body:", req.body);
+    console.log("Parsed values:", { item_id, user_id, quantity, notes });
+
     if (!item_id || !user_id) {
       await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Item ID and User ID are required",
+      });
+    }
+
+    // First, get the item to check its current state
+    console.log("Looking for item with ID:", item_id);
+    let itemCheck = await Item.findById(item_id).session(session);
+
+    if (!itemCheck) {
+      console.log("Item not found with ID:", item_id);
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Item not found",
+      });
+    }
+
+    console.log("Found item (before fix):", {
+      id: itemCheck._id,
+      name: itemCheck.name,
+      quantity: itemCheck.quantity,
+      available_quantity: itemCheck.available_quantity,
+      reserved_quantity: itemCheck.reserved_quantity,
+    });
+
+    // If available_quantity is not set, initialize it atomically
+    if (
+      itemCheck.available_quantity === undefined ||
+      itemCheck.available_quantity === null
+    ) {
+      console.log("available_quantity not set, initializing it");
+      const calculatedAvailable =
+        itemCheck.quantity - (itemCheck.reserved_quantity || 0);
+      await Item.findByIdAndUpdate(
+        item_id,
+        { $set: { available_quantity: calculatedAvailable } },
+        { session }
+      );
+      // Re-fetch the item to get the updated value
+      itemCheck = await Item.findById(item_id).session(session);
+      console.log("Item after initialization:", {
+        available_quantity: itemCheck.available_quantity,
+      });
+    }
+
+    // Calculate the actual available quantity
+    const actualAvailableQty = itemCheck.available_quantity;
+
+    console.log("Actual available quantity:", actualAvailableQty);
+
+    // Check if enough quantity is available
+    if (actualAvailableQty < quantity) {
+      console.log(
+        `Insufficient quantity: requested ${quantity}, available ${actualAvailableQty}`
+      );
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient quantity available. Only ${actualAvailableQty} units available.`,
       });
     }
 
@@ -84,12 +145,17 @@ exports.createAssignment = async (req, res) => {
     );
 
     if (!item) {
+      console.log(
+        "Atomic update failed - concurrent modification or insufficient quantity"
+      );
       await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Item not found or insufficient quantity available",
       });
     }
+
+    console.log("Item updated successfully, creating assignment");
 
     // Create assignment
     const assignment = await Assignment.create(
@@ -108,6 +174,7 @@ exports.createAssignment = async (req, res) => {
     );
 
     await session.commitTransaction();
+    console.log("Assignment created successfully");
 
     // Populate after transaction
     await assignment[0].populate([
