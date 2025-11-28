@@ -1,7 +1,7 @@
 require("dotenv").config();
 const app = require("./app");
 
-const PORT = process.env.API_PORT || 5000;
+const PORT = process.env.API_PORT || 6210;
 
 // Start server (MongoDB connection is handled in app.js)
 const server = app.listen(PORT, () => {
