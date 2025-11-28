@@ -1,52 +1,26 @@
-const { Item } = require('../models');
+const { Item } = require("../models");
+const { paginatedQuery } = require("../utils/queryHelpers");
 
 // Get all items with pagination
 exports.getAllItems = async (req, res) => {
   try {
-    const { category, status, search, page = 1, limit = 50 } = req.query;
-    
-    let filter = {};
-
-    if (category) {
-      filter.category = category;
-    }
-
-    if (status) {
-      filter.status = status;
-    }
-
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const items = await Item.find(filter)
-      .sort({ created_at: -1 })
-      .limit(parseInt(limit))
-      .skip(skip);
-
-    const total = await Item.countDocuments(filter);
+    const result = await paginatedQuery(
+      Item,
+      req.query,
+      ["name", "description", "sku", "barcode"],
+      "category"
+    );
 
     res.json({
       success: true,
-      data: {
-        items,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / parseInt(limit))
-        }
-      }
+      ...result,
     });
   } catch (error) {
-    console.error('Get items error:', error);
+    console.error("Get items error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get items'
+      message: "Failed to get items",
+      error: error.message,
     });
   }
 };
@@ -61,19 +35,19 @@ exports.getItemById = async (req, res) => {
     if (!item) {
       return res.status(404).json({
         success: false,
-        message: 'Item not found'
+        message: "Item not found",
       });
     }
 
     res.json({
       success: true,
-      data: item
+      data: item,
     });
   } catch (error) {
-    console.error('Get item error:', error);
+    console.error("Get item error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get item'
+      message: "Failed to get item",
     });
   }
 };
@@ -86,27 +60,28 @@ exports.createItem = async (req, res) => {
     if (!itemData.name) {
       return res.status(400).json({
         success: false,
-        message: 'Item name is required'
+        message: "Item name is required",
       });
     }
 
     // Set defaults
     if (!itemData.quantity) itemData.quantity = 0;
-    if (!itemData.available_quantity) itemData.available_quantity = itemData.quantity;
+    if (!itemData.available_quantity)
+      itemData.available_quantity = itemData.quantity;
     if (!itemData.low_stock_threshold) itemData.low_stock_threshold = 10;
-    if (!itemData.status) itemData.status = 'active';
+    if (!itemData.status) itemData.status = "active";
 
     const item = await Item.create(itemData);
 
     res.status(201).json({
       success: true,
-      data: item
+      data: item,
     });
   } catch (error) {
-    console.error('Create item error:', error);
+    console.error("Create item error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create item'
+      message: "Failed to create item",
     });
   }
 };
@@ -117,28 +92,27 @@ exports.updateItem = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const item = await Item.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const item = await Item.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!item) {
       return res.status(404).json({
         success: false,
-        message: 'Item not found'
+        message: "Item not found",
       });
     }
 
     res.json({
       success: true,
-      data: item
+      data: item,
     });
   } catch (error) {
-    console.error('Update item error:', error);
+    console.error("Update item error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update item'
+      message: "Failed to update item",
     });
   }
 };
@@ -153,19 +127,19 @@ exports.deleteItem = async (req, res) => {
     if (!item) {
       return res.status(404).json({
         success: false,
-        message: 'Item not found'
+        message: "Item not found",
       });
     }
 
     res.json({
       success: true,
-      data: item
+      data: item,
     });
   } catch (error) {
-    console.error('Delete item error:', error);
+    console.error("Delete item error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete item'
+      message: "Failed to delete item",
     });
   }
 };
@@ -173,17 +147,17 @@ exports.deleteItem = async (req, res) => {
 // Get categories
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Item.distinct('category');
+    const categories = await Item.distinct("category");
 
     res.json({
       success: true,
-      data: categories.filter(c => c).sort()
+      data: categories.filter((c) => c).sort(),
     });
   } catch (error) {
-    console.error('Get categories error:', error);
+    console.error("Get categories error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get categories'
+      message: "Failed to get categories",
     });
   }
 };
@@ -192,18 +166,18 @@ exports.getCategories = async (req, res) => {
 exports.getLowStock = async (req, res) => {
   try {
     const items = await Item.find({
-      $expr: { $lte: ['$quantity', '$low_stock_threshold'] }
+      $expr: { $lte: ["$quantity", "$low_stock_threshold"] },
     }).sort({ quantity: 1 });
 
     res.json({
       success: true,
-      data: items
+      data: items,
     });
   } catch (error) {
-    console.error('Get low stock error:', error);
+    console.error("Get low stock error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get low stock items'
+      message: "Failed to get low stock items",
     });
   }
 };
@@ -216,30 +190,30 @@ exports.bulkCreate = async (req, res) => {
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Items array is required'
+        message: "Items array is required",
       });
     }
 
     // Set defaults for each item
-    const itemsWithDefaults = items.map(item => ({
+    const itemsWithDefaults = items.map((item) => ({
       ...item,
       quantity: item.quantity || 0,
       available_quantity: item.available_quantity || item.quantity || 0,
       low_stock_threshold: item.low_stock_threshold || 10,
-      status: item.status || 'active'
+      status: item.status || "active",
     }));
 
     const createdItems = await Item.insertMany(itemsWithDefaults);
 
     res.status(201).json({
       success: true,
-      data: createdItems
+      data: createdItems,
     });
   } catch (error) {
-    console.error('Bulk create error:', error);
+    console.error("Bulk create error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to bulk create items'
+      message: "Failed to bulk create items",
     });
   }
 };
