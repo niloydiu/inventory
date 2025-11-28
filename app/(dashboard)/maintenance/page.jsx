@@ -86,11 +86,15 @@ export default function MaintenancePage() {
       ]);
 
       if (allResult.success) {
-        setMaintenance(allResult.data);
+        // Ensure maintenance is always an array
+        const maintenanceData = allResult.data;
+        setMaintenance(Array.isArray(maintenanceData) ? maintenanceData : []);
       }
 
       if (upcomingResult.success) {
-        setUpcoming(upcomingResult.data);
+        // Ensure upcoming is always an array
+        const upcomingData = upcomingResult.data;
+        setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
       }
     } catch (error) {
       toast.error("Failed to load maintenance records");

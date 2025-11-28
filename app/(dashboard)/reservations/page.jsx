@@ -67,7 +67,9 @@ export default function ReservationsPage() {
     try {
       const result = await getAllReservations(token);
       if (result.success) {
-        setReservations(result.data);
+        // Ensure reservations is always an array
+        const reservationsData = result.data;
+        setReservations(Array.isArray(reservationsData) ? reservationsData : []);
       } else {
         toast.error(result.error || "Failed to load reservations");
       }

@@ -27,7 +27,8 @@ export default function FeedsPage() {
     
     try {
       const data = await feedsApi.getAll(token)
-      setFeeds(data)
+      // Ensure feeds is always an array
+      setFeeds(Array.isArray(data) ? data : [])
     } catch (error) {
       toast.error("Failed to load feeds")
     } finally {

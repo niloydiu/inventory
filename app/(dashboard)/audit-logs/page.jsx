@@ -54,7 +54,9 @@ export default function AuditLogsPage() {
       ]);
 
       if (logsResult.success) {
-        setLogs(logsResult.data);
+        // Ensure logs is always an array
+        const logsData = logsResult.data;
+        setLogs(Array.isArray(logsData) ? logsData : []);
       }
 
       if (statsResult.success) {

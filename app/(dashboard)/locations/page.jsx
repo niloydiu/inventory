@@ -44,7 +44,8 @@ export default function LocationsPage() {
     
     try {
       const data = await locationsApi.getAll(token)
-      setLocations(data)
+      // Ensure locations is always an array
+      setLocations(Array.isArray(data) ? data : [])
     } catch (error) {
       toast.error("Failed to load locations")
     } finally {

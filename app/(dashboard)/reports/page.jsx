@@ -47,11 +47,15 @@ export default function ReportsPage() {
       ])
       
       if (lowStockResult.success) {
-        setLowStock(lowStockResult.data)
+        // Ensure lowStock is always an array
+        const lowStockData = lowStockResult.data;
+        setLowStock(Array.isArray(lowStockData) ? lowStockData : []);
       }
       
       if (assignedResult.success) {
-        setAssignedItems(assignedResult.data)
+        // Ensure assignedItems is always an array
+        const assignedData = assignedResult.data;
+        setAssignedItems(Array.isArray(assignedData) ? assignedData : []);
       }
     } catch (error) {
       toast.error("Failed to load reports")
