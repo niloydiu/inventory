@@ -34,6 +34,16 @@ app.prepare().then(() => {
         console.log(
           `[Server] Routing to Express: ${req.method} ${parsedUrl.pathname}`
         );
+        
+        // Forward the real client IP to Express
+        // This is crucial for audit logging to capture the actual client IP
+        if (!req.headers['x-forwarded-for']) {
+          const clientIp = req.socket?.remoteAddress || req.connection?.remoteAddress;
+          if (clientIp) {
+            req.headers['x-forwarded-for'] = clientIp;
+          }
+        }
+        
         return expressApp(req, res);
       }
 
