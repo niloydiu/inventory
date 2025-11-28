@@ -64,8 +64,16 @@ const apiLimiter = rateLimit({
 
 // CORS configuration with multiple origins support
 const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(",").map((origin) => origin.trim())
+  ? process.env.FRONTEND_URL.split(",").map((origin) => {
+      // Remove trailing slash and trim
+      return origin.trim().replace(/\/$/, "");
+    })
   : ["http://localhost:3000", "http://localhost:6211"];
+
+// Log allowed origins in development
+if (process.env.NODE_ENV !== "production") {
+  console.log("🌐 Allowed CORS origins:", allowedOrigins);
+}
 
 app.use(
   cors({
@@ -73,14 +81,35 @@ app.use(
       // Allow requests with no origin (mobile apps, Postman, etc.)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) === -1) {
-        return callback(new Error("Not allowed by CORS"), false);
+      // Normalize origin (remove trailing slash)
+      const normalizedOrigin = origin.replace(/\/$/, "");
+
+      // Check exact match
+      if (allowedOrigins.indexOf(normalizedOrigin) !== -1) {
+        return callback(null, true);
       }
-      return callback(null, true);
+
+      // Check if origin matches any allowed origin (case-insensitive, protocol flexible)
+      const isAllowed = allowedOrigins.some((allowed) => {
+        const allowedNormalized = allowed.replace(/\/$/, "");
+        // Match domain regardless of protocol (http/https)
+        const allowedDomain = allowedNormalized.replace(/^https?:\/\//, "");
+        const originDomain = normalizedOrigin.replace(/^https?:\/\//, "");
+        return allowedDomain === originDomain;
+      });
+
+      if (isAllowed) {
+        return callback(null, true);
+      }
+
+      // Log CORS error for debugging
+      console.warn(`⚠️  CORS blocked: ${normalizedOrigin}. Allowed:`, allowedOrigins);
+      return callback(new Error(`Not allowed by CORS: ${normalizedOrigin}`), false);
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
     maxAge: 86400, // 24 hours
   })
 );
