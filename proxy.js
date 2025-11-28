@@ -1,17 +1,30 @@
 import { NextResponse } from "next/server";
 
-const publicPaths = ["/login", "/register", "/"];
+const publicPaths = ["/login", "/register", "/", "/logout"];
 
+// Export as 'proxy' for Next.js 16+
 export function proxy(request) {
   const token = request.cookies.get("inventory_auth_token")?.value;
   const { pathname } = request.nextUrl;
 
+  // Create response
+  const response = NextResponse.next();
+
+  // Add cache-control headers to prevent caching of authenticated pages
+  response.headers.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, private"
+  );
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
+
   // Allow public paths
   if (publicPaths.includes(pathname)) {
-    if (token && pathname !== "/") {
+    // If user is logged in and tries to access login/register, redirect to dashboard
+    if (token && (pathname === "/login" || pathname === "/register")) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-    return NextResponse.next();
+    return response;
   }
 
   // Protect dashboard and other authenticated routes
@@ -29,18 +42,35 @@ export function proxy(request) {
     "/audit-logs",
     "/reports",
     "/settings",
+    "/categories",
+    "/stock-movements",
+    "/stock-transfers",
+    "/suppliers",
+    "/purchase-orders",
+    "/product-assignments",
+    "/notifications",
   ];
 
-  if (
-    !token &&
-    protectedPrefixes.some((prefix) => pathname.startsWith(prefix))
-  ) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Check if the pathname starts with any protected prefix
+  if (protectedPrefixes.some((prefix) => pathname.startsWith(prefix))) {
+    if (!token) {
+      // No token, redirect to login
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 };
