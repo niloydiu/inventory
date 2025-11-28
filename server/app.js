@@ -48,8 +48,32 @@ app.use((req, res, next) => {
   }
   
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', '*'); // Allow all methods
-  res.header('Access-Control-Allow-Headers', '*'); // Allow all headers
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE');
+  // Explicitly allow ALL common headers including cache-control
+  res.header('Access-Control-Allow-Headers', [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers',
+    'Cookie',
+    'Set-Cookie',
+    'X-Forwarded-For',
+    'Cache-Control',
+    'Pragma',
+    'Expires',
+    'If-Modified-Since',
+    'If-None-Match',
+    'X-Client-IP',
+    'User-Agent',
+    'Referer',
+    'Accept-Language',
+    'Accept-Encoding',
+    'Connection',
+    'Host'
+  ].join(', '));
   res.header('Access-Control-Expose-Headers', '*'); // Expose all headers
   res.header('Access-Control-Max-Age', '86400');
   
@@ -76,8 +100,32 @@ app.use(
       return callback(null, true); // Allow all origins
     },
     credentials: true, // Allow cookies and credentials
-    methods: '*', // Allow all HTTP methods
-    allowedHeaders: '*', // Allow all headers
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE'],
+    // Explicitly list ALL headers - '*' doesn't work in some CORS implementations
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
+      'Cookie',
+      'Set-Cookie',
+      'X-Forwarded-For',
+      'Cache-Control', // This was missing!
+      'Pragma',
+      'Expires',
+      'If-Modified-Since',
+      'If-None-Match',
+      'X-Client-IP',
+      'User-Agent',
+      'Referer',
+      'Accept-Language',
+      'Accept-Encoding',
+      'Connection',
+      'Host'
+    ],
     exposedHeaders: '*', // Expose all headers
     maxAge: 86400,
     preflightContinue: false,
