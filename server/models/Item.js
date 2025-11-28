@@ -28,6 +28,9 @@ const itemSchema = new mongoose.Schema(
       enum: [
         "Software",
         "Hardware",
+        "Stationery",
+        "Essentials",
+        "Consumable",
         "Office Supplies",
         "Electronics",
         "Furniture",
@@ -54,18 +57,7 @@ const itemSchema = new mongoose.Schema(
     unit: {
       type: String,
       default: "units",
-      enum: [
-        "units",
-        "kg",
-        "lbs",
-        "liters",
-        "gallons",
-        "meters",
-        "feet",
-        "boxes",
-        "pairs",
-        "sets",
-      ],
+      trim: true,
     },
     // Multi-location support
     location_id: {
@@ -228,7 +220,16 @@ const itemSchema = new mongoose.Schema(
     // Status
     status: {
       type: String,
-      enum: ["available", "in_use", "maintenance", "retired", "active", "inactive", "discontinued", "out_of_stock"],
+      enum: [
+        "available",
+        "in_use",
+        "maintenance",
+        "retired",
+        "active",
+        "inactive",
+        "discontinued",
+        "out_of_stock",
+      ],
       default: "available",
     },
     notes: {

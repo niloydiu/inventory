@@ -31,6 +31,21 @@ const categories = [
   "Consumable",
 ];
 const statuses = ["available", "in_use", "maintenance", "retired"];
+const unitTypes = [
+  "units",
+  "kg",
+  "lbs",
+  "liters",
+  "gallons",
+  "meters",
+  "feet",
+  "boxes",
+  "pairs",
+  "sets",
+  "pieces",
+  "packs",
+  "bottles",
+];
 
 export function ItemForm({
   defaultValues,
@@ -44,7 +59,7 @@ export function ItemForm({
       name: "",
       category: "Hardware",
       quantity: 0,
-      unit_type: "piece",
+      unit_type: "units",
       price: 0,
       minimum_level: 0,
       serial_number: "",
@@ -120,9 +135,23 @@ export function ItemForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Unit Type *</FormLabel>
-                <FormControl>
-                  <Input placeholder="piece, pack, bottle, etc." {...field} />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select unit type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {unitTypes.map((unit) => (
+                      <SelectItem key={unit} value={unit}>
+                        {unit}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
