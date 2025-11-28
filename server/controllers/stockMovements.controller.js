@@ -177,7 +177,7 @@ exports.createMovement = async (req, res) => {
       quantity_after: item.quantity,
       reason,
       notes,
-      created_by: req.user.userId,
+      created_by: req.user.user_id,
     });
 
     await movement.save();

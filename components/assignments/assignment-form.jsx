@@ -35,8 +35,7 @@ export function AssignmentForm({
     defaultValues: defaultValues || {
       item_id: "",
       user_id: "",
-      assigned_quantity: 1,
-      serial_numbers_assigned: "",
+      quantity: 1,
       notes: "",
     },
   });
@@ -85,14 +84,14 @@ export function AssignmentForm({
           name="user_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Assign To</FormLabel>
+              <FormLabel>Assign To *</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value?.toString()}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select user (optional)" />
+                    <SelectValue placeholder="Select user" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -116,26 +115,12 @@ export function AssignmentForm({
 
         <FormField
           control={form.control}
-          name="assigned_quantity"
+          name="quantity"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Quantity *</FormLabel>
               <FormControl>
                 <Input type="number" min="1" placeholder="1" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="serial_numbers_assigned"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Serial Numbers</FormLabel>
-              <FormControl>
-                <Input placeholder="Optional (comma-separated)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

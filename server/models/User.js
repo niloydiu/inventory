@@ -155,10 +155,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for performance
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ username: 1 }, { unique: true });
-userSchema.index({ employee_id: 1 }, { sparse: true, unique: true });
+// Indexes for performance (email, username, employee_id already have unique: true in schema)
 userSchema.index({ role: 1 });
 userSchema.index({ is_active: 1 });
 userSchema.index({ department: 1 });
