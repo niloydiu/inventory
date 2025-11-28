@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { feedSchema } from "@/lib/validations"
-import { Button } from "@/components/ui/button"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { feedSchema } from "@/lib/validations";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -11,20 +11,29 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2 } from "lucide-react"
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
 
-const feedTypes = ["Cattle Feed", "Poultry Feed", "Goat Feed", "Sheep Feed", "Pig Feed", "Fish Feed", "Supplement", "Other"]
+const feedTypes = [
+  "Cattle Feed",
+  "Poultry Feed",
+  "Goat Feed",
+  "Sheep Feed",
+  "Pig Feed",
+  "Fish Feed",
+  "Supplement",
+  "Other",
+];
 
 export function FeedForm({ defaultValues, onSubmit, isLoading }) {
   const form = useForm({
@@ -34,13 +43,17 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
       feed_type: "Cattle Feed",
       quantity: 0,
       unit_type: "kg",
+      production_date: "",
+      expiry_date: "",
+      batch_number: "",
       cost_price: 0,
       unit_price: 0,
+      supplier_name: "",
       minimum_level: 0,
       alert_enabled: true,
       description: "",
     },
-  })
+  });
 
   return (
     <Form {...form}>
@@ -59,14 +72,17 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="feed_type"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Feed Type *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select feed type" />
@@ -74,7 +90,9 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
                   </FormControl>
                   <SelectContent>
                     {feedTypes.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -82,7 +100,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="quantity"
@@ -96,7 +114,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="unit_type"
@@ -110,7 +128,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="cost_price"
@@ -118,13 +136,18 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               <FormItem>
                 <FormLabel>Cost Price</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="unit_price"
@@ -132,13 +155,18 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               <FormItem>
                 <FormLabel>Unit Price</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="production_date"
@@ -152,7 +180,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="expiry_date"
@@ -166,7 +194,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="batch_number"
@@ -180,7 +208,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="supplier_name"
@@ -194,7 +222,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="minimum_level"
@@ -208,7 +236,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="alert_enabled"
@@ -227,7 +255,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="description"
@@ -235,18 +263,22 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Optional description..." rows={3} {...field} />
+                <Textarea
+                  placeholder="Optional description..."
+                  rows={3}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {defaultValues ? "Update Feed" : "Add Feed"}
         </Button>
       </form>
     </Form>
-  )
+  );
 }

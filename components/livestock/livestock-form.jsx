@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { livestockSchema } from "@/lib/validations"
-import { Button } from "@/components/ui/button"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { livestockSchema } from "@/lib/validations";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -11,22 +11,31 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
-const species = ["Cow", "Goat", "Sheep", "Chicken", "Duck", "Pig", "Buffalo", "Other"]
-const genders = ["Male", "Female"]
-const healthStatuses = ["healthy", "sick", "under_treatment", "quarantined"]
-const statuses = ["active", "sold", "deceased", "transferred"]
+const species = [
+  "Cow",
+  "Goat",
+  "Sheep",
+  "Chicken",
+  "Duck",
+  "Pig",
+  "Buffalo",
+  "Other",
+];
+const genders = ["Male", "Female"];
+const healthStatuses = ["healthy", "sick", "under_treatment", "quarantined"];
+const statuses = ["active", "sold", "deceased", "transferred"];
 
 export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
   const form = useForm({
@@ -39,10 +48,12 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
       age: 0,
       weight: 0,
       health_status: "healthy",
+      tag_number: "",
+      purchase_price: 0,
       status: "active",
       description: "",
     },
-  })
+  });
 
   return (
     <Form {...form}>
@@ -61,14 +72,17 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="species"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Species *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select species" />
@@ -76,7 +90,9 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
                   </FormControl>
                   <SelectContent>
                     {species.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -84,7 +100,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="breed"
@@ -98,14 +114,17 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="gender"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Gender *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select gender" />
@@ -113,7 +132,9 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
                   </FormControl>
                   <SelectContent>
                     {genders.map((g) => (
-                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                      <SelectItem key={g} value={g}>
+                        {g}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -121,7 +142,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="age"
@@ -135,7 +156,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="weight"
@@ -149,14 +170,17 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="health_status"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Health Status *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select health status" />
@@ -165,7 +189,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
                   <SelectContent>
                     {healthStatuses.map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace('_', ' ').toUpperCase()}
+                        {status.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -174,7 +198,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="tag_number"
@@ -188,7 +212,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="purchase_price"
@@ -196,20 +220,28 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
               <FormItem>
                 <FormLabel>Purchase Price</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="status"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -228,7 +260,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="description"
@@ -236,18 +268,22 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Optional description..." rows={3} {...field} />
+                <Textarea
+                  placeholder="Optional description..."
+                  rows={3}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {defaultValues ? "Update Livestock" : "Add Livestock"}
         </Button>
       </form>
     </Form>
-  )
+  );
 }
