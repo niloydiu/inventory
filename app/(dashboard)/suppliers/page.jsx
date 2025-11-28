@@ -64,8 +64,8 @@ export default function SuppliersPage() {
     if (!token) return;
 
     try {
-      const response = await apiClient.get("/suppliers", token);
-      setSuppliers(response.suppliers || []);
+      const response = await apiClient.get("/suppliers", {}, token);
+      setSuppliers(response || []);
     } catch (error) {
       toast.error("Failed to load suppliers");
     } finally {
@@ -77,7 +77,7 @@ export default function SuppliersPage() {
     if (!token) return;
 
     try {
-      const response = await apiClient.get("/suppliers/stats", token);
+      const response = await apiClient.get("/suppliers/stats", {}, token);
       setStats(response.stats);
     } catch (error) {
       console.error("Failed to load stats");
@@ -120,7 +120,7 @@ export default function SuppliersPage() {
     setFormDialog(supplier._id);
     setFormData({
       name: supplier.name,
-      supplier_code: supplier.supplier_code,
+      code: supplier.code,
       email: supplier.email,
       phone: supplier.phone,
       website: supplier.website,
@@ -152,7 +152,7 @@ export default function SuppliersPage() {
               setFormData({
                 status: "active",
                 currency: "USD",
-                payment_terms: "Net 30",
+                payment_terms: "net_30",
               });
             }}
           >
@@ -244,7 +244,7 @@ export default function SuppliersPage() {
                       </TableCell>
                       <TableCell>
                         <code className="text-sm">
-                          {supplier.supplier_code || "N/A"}
+                          {supplier.code || "N/A"}
                         </code>
                       </TableCell>
                       <TableCell>
@@ -497,11 +497,11 @@ export default function SuppliersPage() {
                 />
               </div>
               <div>
-                <Label>Supplier Code</Label>
+                <Label>Supplier Code *</Label>
                 <Input
-                  value={formData.supplier_code || ""}
+                  value={formData.code || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, supplier_code: e.target.value })
+                    setFormData({ ...formData, code: e.target.value })
                   }
                   placeholder="SUP-001"
                 />
@@ -560,7 +560,7 @@ export default function SuppliersPage() {
               <div>
                 <Label>Payment Terms</Label>
                 <Select
-                  value={formData.payment_terms || "Net 30"}
+                  value={formData.payment_terms || "net_30"}
                   onValueChange={(v) =>
                     setFormData({ ...formData, payment_terms: v })
                   }
@@ -569,11 +569,12 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Immediate">Immediate</SelectItem>
-                    <SelectItem value="Net 15">Net 15</SelectItem>
-                    <SelectItem value="Net 30">Net 30</SelectItem>
-                    <SelectItem value="Net 60">Net 60</SelectItem>
-                    <SelectItem value="Net 90">Net 90</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="net_15">Net 15</SelectItem>
+                    <SelectItem value="net_30">Net 30</SelectItem>
+                    <SelectItem value="net_60">Net 60</SelectItem>
+                    <SelectItem value="net_90">Net 90</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
