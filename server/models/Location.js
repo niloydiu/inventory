@@ -119,9 +119,8 @@ const locationSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Indexes (code already has unique: true in schema)
 locationSchema.index({ name: 1 });
-locationSchema.index({ code: 1 }, { unique: true });
 locationSchema.index({ type: 1 });
 locationSchema.index({ status: 1 });
 locationSchema.index({ parent_location_id: 1 });

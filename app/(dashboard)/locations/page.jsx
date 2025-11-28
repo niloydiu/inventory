@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { getAllLocations, createLocation, updateLocation, deleteLocation } from "@/lib/actions/locations.actions"
+import { locationsApi } from "@/lib/api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -43,12 +43,8 @@ export default function LocationsPage() {
     if (!token) return
     
     try {
-      const result = await getAllLocations(token)
-      if (result.success) {
-        setLocations(result.data)
-      } else {
-        toast.error(result.error || "Failed to load locations")
-      }
+      const data = await locationsApi.getAll(token)
+      setLocations(data)
     } catch (error) {
       toast.error("Failed to load locations")
     } finally {
@@ -59,19 +55,15 @@ export default function LocationsPage() {
   async function handleSubmit() {
     try {
       const result = formDialog === 'new'
-        ? await createLocation(formData, token)
-        : await updateLocation(formDialog, formData, token)
+        ? await locationsApi.create(formData, token)
+        : await locationsApi.update(formDialog, formData, token)
       
-      if (result.success) {
-        toast.success(`Location ${formDialog === 'new' ? 'created' : 'updated'} successfully`)
-        setFormDialog(null)
-        setFormData({})
-        fetchLocations()
-      } else {
-        toast.error(result.error || "Operation failed")
-      }
+      toast.success(`Location ${formDialog === 'new' ? 'created' : 'updated'} successfully`)
+      setFormDialog(null)
+      setFormData({})
+      fetchLocations()
     } catch (error) {
-      toast.error("Operation failed")
+      toast.error(error.message || "Operation failed")
     }
   }
 
@@ -79,15 +71,11 @@ export default function LocationsPage() {
     if (!confirm("Are you sure you want to delete this location?")) return
     
     try {
-      const result = await deleteLocation(id, token)
-      if (result.success) {
-        toast.success("Location deleted successfully")
-        fetchLocations()
-      } else {
-        toast.error(result.error || "Failed to delete location")
-      }
+      await locationsApi.delete(id, token)
+      toast.success("Location deleted successfully")
+      fetchLocations()
     } catch (error) {
-      toast.error("Failed to delete location")
+      toast.error(error.message || "Failed to delete location")
     }
   }
 
@@ -173,12 +161,13 @@ export default function LocationsPage() {
               <DialogTitle>{formDialog === 'new' ? 'Add Location' : 'Edit Location'}</DialogTitle>
               <DialogDescription>Enter location details</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
               <div>
                 <Label>Name *</Label>
                 <Input
                   value={formData.name || ''}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
                 />
               </div>
               <div>
@@ -218,10 +207,10 @@ export default function LocationsPage() {
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                 />
               </div>
-              <Button onClick={handleSubmit}>
+              <Button type="submit">
                 {formDialog === 'new' ? 'Create' : 'Update'}
               </Button>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>

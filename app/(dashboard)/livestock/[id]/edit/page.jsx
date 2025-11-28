@@ -49,6 +49,26 @@ export default function EditLivestockPage() {
     }
   }
 
+  // Transform livestock data to ensure all form fields have proper default values
+  const getFormDefaultValues = () => {
+    if (!livestock) return undefined;
+    
+    return {
+      name: livestock.name || "",
+      species: livestock.species || "Cow",
+      breed: livestock.breed || "",
+      gender: livestock.gender ? livestock.gender.charAt(0).toUpperCase() + livestock.gender.slice(1) : "Male",
+      age: livestock.date_of_birth ? 
+        Math.floor((new Date() - new Date(livestock.date_of_birth)) / (1000 * 60 * 60 * 24 * 30.44)).toString() : "",
+      weight: livestock.weight ? livestock.weight.toString() : "",
+      health_status: livestock.health_status || "healthy",
+      status: "active", // Default status since model doesn't have this field
+      description: livestock.notes || "",
+      tag_number: livestock.tag_number || "",
+      purchase_price: livestock.purchase_price ? livestock.purchase_price.toString() : "",
+    };
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
   }
@@ -74,7 +94,7 @@ export default function EditLivestockPage() {
         </CardHeader>
         <CardContent>
           <LivestockForm 
-            defaultValues={livestock} 
+            defaultValues={getFormDefaultValues()} 
             onSubmit={onSubmit} 
             isLoading={isLoading} 
           />

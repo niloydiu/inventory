@@ -13,7 +13,7 @@ exports.getNotifications = async (req, res) => {
       sort = "-created_at",
     } = req.query;
 
-    const query = { user_id: req.user.userId };
+    const query = { user_id: req.user.user_id };
 
     // Filter by type
     if (type) {
@@ -39,7 +39,7 @@ exports.getNotifications = async (req, res) => {
         .limit(parseInt(limit))
         .lean(),
       Notification.countDocuments(query),
-      Notification.countDocuments({ user_id: req.user.userId, is_read: false }),
+      Notification.countDocuments({ user_id: req.user.user_id, is_read: false }),
     ]);
 
     res.json({
@@ -66,7 +66,7 @@ exports.getNotificationById = async (req, res) => {
   try {
     const notification = await Notification.findOne({
       _id: req.params.id,
-      user_id: req.user.userId, // Ensure user can only access their own notifications
+      user_id: req.user.user_id, // Ensure user can only access their own notifications
     });
 
     if (!notification) {
@@ -111,7 +111,7 @@ exports.createNotification = async (req, res) => {
 exports.markAsRead = async (req, res) => {
   try {
     const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, user_id: req.user.userId },
+      { _id: req.params.id, user_id: req.user.user_id },
       { is_read: true, read_at: new Date() },
       { new: true }
     );
@@ -134,7 +134,7 @@ exports.markAsRead = async (req, res) => {
 exports.markAllAsRead = async (req, res) => {
   try {
     const result = await Notification.updateMany(
-      { user_id: req.user.userId, is_read: false },
+      { user_id: req.user.user_id, is_read: false },
       { is_read: true, read_at: new Date() }
     );
 
@@ -156,7 +156,7 @@ exports.deleteNotification = async (req, res) => {
   try {
     const notification = await Notification.findOneAndDelete({
       _id: req.params.id,
-      user_id: req.user.userId,
+      user_id: req.user.user_id,
     });
 
     if (!notification) {
@@ -177,7 +177,7 @@ exports.deleteNotification = async (req, res) => {
 exports.deleteAllRead = async (req, res) => {
   try {
     const result = await Notification.deleteMany({
-      user_id: req.user.userId,
+      user_id: req.user.user_id,
       is_read: true,
     });
 
@@ -235,14 +235,14 @@ exports.createNotificationsForUsers = async (userIds, notificationData) => {
 exports.getNotificationStats = async (req, res) => {
   try {
     const [total, unread, byType, byPriority] = await Promise.all([
-      Notification.countDocuments({ user_id: req.user.userId }),
-      Notification.countDocuments({ user_id: req.user.userId, is_read: false }),
+      Notification.countDocuments({ user_id: req.user.user_id }),
+      Notification.countDocuments({ user_id: req.user.user_id, is_read: false }),
       Notification.aggregate([
-        { $match: { user_id: req.user.userId } },
+        { $match: { user_id: req.user.user_id } },
         { $group: { _id: "$type", count: { $sum: 1 } } },
       ]),
       Notification.aggregate([
-        { $match: { user_id: req.user.userId, is_read: false } },
+        { $match: { user_id: req.user.user_id, is_read: false } },
         { $group: { _id: "$priority", count: { $sum: 1 } } },
       ]),
     ]);

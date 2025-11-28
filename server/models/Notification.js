@@ -74,9 +74,8 @@ const notificationSchema = new mongoose.Schema(
 notificationSchema.index({ user_id: 1, is_read: 1 });
 notificationSchema.index({ user_id: 1, created_at: -1 });
 notificationSchema.index({ type: 1 });
-notificationSchema.index({ expires_at: 1 });
 
-// Auto-delete expired notifications
+// Auto-delete expired notifications (TTL index)
 notificationSchema.index({ expires_at: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model("Notification", notificationSchema);

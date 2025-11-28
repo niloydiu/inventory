@@ -4,7 +4,6 @@ const stockTransferSchema = new mongoose.Schema(
   {
     transfer_number: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
     },
@@ -112,16 +111,15 @@ const stockTransferSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-stockTransferSchema.index({ transfer_number: 1 }, { unique: true });
+// Indexes (transfer_number already has unique: true in schema)
 stockTransferSchema.index({ from_location_id: 1 });
 stockTransferSchema.index({ to_location_id: 1 });
 stockTransferSchema.index({ status: 1 });
 stockTransferSchema.index({ request_date: -1 });
 
 // Auto-generate transfer number
-stockTransferSchema.pre("save", async function (next) {
-  if (this.isNew && !this.transfer_number) {
+stockTransferSchema.pre("save", async function () {
+  if (!this.transfer_number) {
     const count = await this.constructor.countDocuments();
     const date = new Date();
     const year = date.getFullYear();
@@ -131,7 +129,6 @@ stockTransferSchema.pre("save", async function (next) {
       "0"
     )}`;
   }
-  next();
 });
 
 module.exports = mongoose.model("StockTransfer", stockTransferSchema);
