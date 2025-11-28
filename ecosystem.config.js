@@ -18,11 +18,8 @@ module.exports = {
       script: "server/index.js",
       instances: 1,
       exec_mode: "fork",
-      env: {
-        NODE_ENV: "production",
-        API_PORT: 6210,
-        FRONTEND_URL: "http://localhost:6211",
-      },
+      // Environment variables will be loaded from .env file
+      // via dotenv.config() in server/index.js
       error_file: "./logs/api-error.log",
       out_file: "./logs/api-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
@@ -40,12 +37,8 @@ module.exports = {
       script: "next-server.js",
       instances: 1,
       exec_mode: "fork",
-      env: {
-        NODE_ENV: "production",
-        FRONTEND_PORT: 6211,
-        HOSTNAME: "0.0.0.0",
-        NEXT_PUBLIC_API_URL: "http://localhost:6210/api/v1",
-      },
+      // Environment variables will be loaded from .env file
+      // via dotenv.config() in next-server.js
       error_file: "./logs/frontend-error.log",
       out_file: "./logs/frontend-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
