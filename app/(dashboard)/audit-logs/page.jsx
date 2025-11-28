@@ -30,7 +30,7 @@ export default function AuditLogsPage() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     action: "all",
-    resource_type: "",
+    entity_type: "",
     limit: 100,
   });
 
@@ -124,7 +124,7 @@ export default function AuditLogsPage() {
           <CardHeader>
             <CardTitle>Filters</CardTitle>
             <CardDescription>
-              Filter audit logs by action or resource type
+              Filter audit logs by action or entity type
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-3">
@@ -151,12 +151,12 @@ export default function AuditLogsPage() {
             </div>
 
             <div>
-              <Label>Resource Type</Label>
+              <Label>Entity Type</Label>
               <Input
                 placeholder="e.g., item, user, assignment"
-                value={filters.resource_type}
+                value={filters.entity_type}
                 onChange={(e) =>
-                  setFilters({ ...filters, resource_type: e.target.value })
+                  setFilters({ ...filters, entity_type: e.target.value })
                 }
               />
             </div>

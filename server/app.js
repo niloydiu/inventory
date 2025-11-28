@@ -14,6 +14,17 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+// Trust proxy configuration
+// In production behind a proxy/load balancer, this should be set to the proxy hop count
+// For development with Next.js custom server, we trust the loopback
+if (process.env.NODE_ENV === 'production') {
+  // In production, trust the first proxy (Vercel, Nginx, etc.)
+  app.set('trust proxy', 1);
+} else {
+  // In development, trust loopback for Next.js custom server
+  app.set('trust proxy', 'loopback');
+}
+
 // Security middleware - Helmet (must be first)
 app.use(
   helmet({
@@ -39,6 +50,7 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Disable trust proxy validation warning
 });
 
 const apiLimiter = rateLimit({
@@ -47,6 +59,7 @@ const apiLimiter = rateLimit({
   message: { success: false, message: "Too many requests, please slow down" },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Disable trust proxy validation warning
 });
 
 // CORS configuration with multiple origins support

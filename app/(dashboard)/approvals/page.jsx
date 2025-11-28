@@ -45,7 +45,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Clock, Plus, Edit, Trash } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Plus, Trash } from "lucide-react";
 import { format } from "date-fns";
 
 const statusColors = {
@@ -134,8 +134,18 @@ export default function ApprovalsPage() {
     try {
       const dataToSubmit = {
         ...formData,
-        requested_by: formData.requested_by || user?.userId,
+        requested_by: formData.requested_by || user?.user_id || user?._id,
       };
+
+      if (!dataToSubmit.requested_by) {
+        toast.error("User not authenticated");
+        return;
+      }
+
+      if (!dataToSubmit.request_type || !dataToSubmit.title) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
 
       if (formDialog === "new") {
         const result = await createApproval(dataToSubmit, token);
@@ -146,13 +156,8 @@ export default function ApprovalsPage() {
           return;
         }
       } else {
-        const result = await updateApproval(formDialog, dataToSubmit, token);
-        if (result.success) {
-          toast.success("Approval request updated successfully");
-        } else {
-          toast.error(result.error || "Failed to update");
-          return;
-        }
+        toast.error("Editing approvals is not supported");
+        return;
       }
 
       setFormDialog(null);
@@ -180,17 +185,6 @@ export default function ApprovalsPage() {
     }
   }
 
-  function openEditDialog(approval) {
-    setFormDialog(approval._id);
-    setFormData({
-      request_type: approval.request_type,
-      title: approval.title,
-      description: approval.description,
-      amount: approval.amount,
-      priority: approval.priority,
-    });
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">Loading...</div>
@@ -205,7 +199,11 @@ export default function ApprovalsPage() {
           <Button
             onClick={() => {
               setFormDialog("new");
-              setFormData({ status: "pending", priority: "medium" });
+              setFormData({ 
+                status: "pending", 
+                priority: "medium",
+                request_type: "purchase"
+              });
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -261,13 +259,6 @@ export default function ApprovalsPage() {
                       >
                         <XCircle className="mr-2 h-4 w-4" />
                         Reject
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openEditDialog(approval)}
-                      >
-                        <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -347,13 +338,6 @@ export default function ApprovalsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => openEditDialog(approval)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
                             onClick={() => handleDelete(approval._id)}
                           >
                             <Trash className="h-4 w-4" />
@@ -408,11 +392,10 @@ export default function ApprovalsPage() {
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="purchase">Purchase</SelectItem>
-                    <SelectItem value="transfer">Transfer</SelectItem>
-                    <SelectItem value="disposal">Disposal</SelectItem>
                     <SelectItem value="assignment">Assignment</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
+                    <SelectItem value="purchase">Purchase</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="reservation">Reservation</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
