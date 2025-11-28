@@ -120,12 +120,13 @@ const sidebarItems = [
     icon: CheckCircle,
     roles: ["admin", "manager", "employee"],
   },
-  {
-    name: "Notifications",
-    href: "/notifications",
-    icon: Bell,
-    roles: ["admin", "manager", "employee"],
-  },
+  // Temporarily hidden - notifications feature needs fixes
+  // {
+  //   name: "Notifications",
+  //   href: "/notifications",
+  //   icon: Bell,
+  //   roles: ["admin", "manager", "employee"],
+  // },
   {
     name: "Reports",
     href: "/reports",
