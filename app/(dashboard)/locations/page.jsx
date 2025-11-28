@@ -1,86 +1,104 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useAuth } from "@/lib/auth-context"
-import { locationsApi } from "@/lib/api"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { locationsApi } from "@/lib/api";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { toast } from "sonner"
-import { Plus, Edit, Trash, MapPin } from "lucide-react"
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { Plus, Edit, Trash, MapPin } from "lucide-react";
 
 const statusColors = {
   active: "bg-green-100 text-green-800",
   inactive: "bg-gray-100 text-gray-800",
   maintenance: "bg-yellow-100 text-yellow-800",
-}
+};
 
 export default function LocationsPage() {
-  const { token, user } = useAuth()
-  const [locations, setLocations] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [formDialog, setFormDialog] = useState(null)
-  const [formData, setFormData] = useState({})
+  const { token, user } = useAuth();
+  const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [formDialog, setFormDialog] = useState(null);
+  const [formData, setFormData] = useState({});
 
-  const canEdit = user?.role === 'admin' || user?.role === 'manager'
+  const canEdit = user?.role === "admin" || user?.role === "manager";
 
   useEffect(() => {
-    fetchLocations()
-  }, [token])
+    fetchLocations();
+  }, [token]);
 
   async function fetchLocations() {
-    if (!token) return
-    
+    if (!token) return;
+
     try {
-      const data = await locationsApi.getAll(token)
-      setLocations(data)
+      const data = await locationsApi.getAll(token);
+      // Ensure locations is always an array
+      setLocations(Array.isArray(data) ? data : []);
     } catch (error) {
-      toast.error("Failed to load locations")
+      toast.error("Failed to load locations");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function handleSubmit() {
     try {
-      const result = formDialog === 'new'
-        ? await locationsApi.create(formData, token)
-        : await locationsApi.update(formDialog, formData, token)
-      
-      toast.success(`Location ${formDialog === 'new' ? 'created' : 'updated'} successfully`)
-      setFormDialog(null)
-      setFormData({})
-      fetchLocations()
+      const result =
+        formDialog === "new"
+          ? await locationsApi.create(formData, token)
+          : await locationsApi.update(formDialog, formData, token);
+
+      toast.success(
+        `Location ${formDialog === "new" ? "created" : "updated"} successfully`
+      );
+      setFormDialog(null);
+      setFormData({});
+      fetchLocations();
     } catch (error) {
-      toast.error(error.message || "Operation failed")
+      toast.error(error.message || "Operation failed");
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this location?")) return
-    
+    if (!confirm("Are you sure you want to delete this location?")) return;
+
     try {
-      await locationsApi.delete(id, token)
-      toast.success("Location deleted successfully")
-      fetchLocations()
+      await locationsApi.delete(id, token);
+      toast.success("Location deleted successfully");
+      fetchLocations();
     } catch (error) {
-      toast.error(error.message || "Failed to delete location")
+      toast.error(error.message || "Failed to delete location");
     }
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>
+    return (
+      <div className="flex items-center justify-center h-full">Loading...</div>
+    );
   }
 
   return (
@@ -89,13 +107,18 @@ export default function LocationsPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Locations</h2>
           {canEdit && (
-            <Button onClick={() => { setFormDialog('new'); setFormData({}); }}>
+            <Button
+              onClick={() => {
+                setFormDialog("new");
+                setFormData({});
+              }}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Location
             </Button>
           )}
         </div>
-        
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {locations?.map((location) => (
             <Card key={location._id}>
@@ -108,7 +131,10 @@ export default function LocationsPage() {
                     </CardTitle>
                     <CardDescription>{location.type}</CardDescription>
                   </div>
-                  <Badge className={statusColors[location.status]} variant="outline">
+                  <Badge
+                    className={statusColors[location.status]}
+                    variant="outline"
+                  >
                     {location.status}
                   </Badge>
                 </div>
@@ -116,27 +142,32 @@ export default function LocationsPage() {
               <CardContent className="space-y-2">
                 {location.address && (
                   <div className="text-sm">
-                    <span className="text-muted-foreground">Address:</span> {location.address}
+                    <span className="text-muted-foreground">Address:</span>{" "}
+                    {location.address}
                   </div>
                 )}
                 {location.capacity && (
                   <div className="text-sm">
-                    <span className="text-muted-foreground">Capacity:</span> {location.current_usage || 0} / {location.capacity}
+                    <span className="text-muted-foreground">Capacity:</span>{" "}
+                    {location.current_usage || 0} / {location.capacity}
                   </div>
                 )}
                 {canEdit && (
                   <div className="flex gap-2 pt-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
-                      onClick={() => { setFormDialog(location._id); setFormData(location); }}
+                      onClick={() => {
+                        setFormDialog(location._id);
+                        setFormData(location);
+                      }}
                     >
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </Button>
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(location._id)}
                     >
@@ -147,32 +178,51 @@ export default function LocationsPage() {
               </CardContent>
             </Card>
           ))}
-          
+
           {(!locations || locations.length === 0) && (
             <div className="col-span-full text-center text-muted-foreground py-8">
               No locations found
             </div>
           )}
         </div>
-        
-        <Dialog open={!!formDialog} onOpenChange={() => { setFormDialog(null); setFormData({}); }}>
+
+        <Dialog
+          open={!!formDialog}
+          onOpenChange={() => {
+            setFormDialog(null);
+            setFormData({});
+          }}
+        >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{formDialog === 'new' ? 'Add Location' : 'Edit Location'}</DialogTitle>
+              <DialogTitle>
+                {formDialog === "new" ? "Add Location" : "Edit Location"}
+              </DialogTitle>
               <DialogDescription>Enter location details</DialogDescription>
             </DialogHeader>
-            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              className="space-y-4"
+            >
               <div>
                 <Label>Name *</Label>
                 <Input
-                  value={formData.name || ''}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  value={formData.name || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required
                 />
               </div>
               <div>
                 <Label>Type *</Label>
-                <Select value={formData.type || 'warehouse'} onValueChange={(v) => setFormData({...formData, type: v})}>
+                <Select
+                  value={formData.type || "warehouse"}
+                  onValueChange={(v) => setFormData({ ...formData, type: v })}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -188,32 +238,41 @@ export default function LocationsPage() {
               <div>
                 <Label>Address</Label>
                 <Input
-                  value={formData.address || ''}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  value={formData.address || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
                 />
               </div>
               <div>
                 <Label>Capacity</Label>
                 <Input
                   type="number"
-                  value={formData.capacity || ''}
-                  onChange={(e) => setFormData({...formData, capacity: parseInt(e.target.value) || 0})}
+                  value={formData.capacity || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      capacity: parseInt(e.target.value) || 0,
+                    })
+                  }
                 />
               </div>
               <div>
                 <Label>Description</Label>
                 <Textarea
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  value={formData.description || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                 />
               </div>
               <Button type="submit">
-                {formDialog === 'new' ? 'Create' : 'Update'}
+                {formDialog === "new" ? "Create" : "Update"}
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
     </div>
-  )
+  );
 }

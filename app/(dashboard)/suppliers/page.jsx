@@ -65,7 +65,9 @@ export default function SuppliersPage() {
 
     try {
       const response = await apiClient.get("/suppliers", {}, token);
-      setSuppliers((response && response.success && response.data) || []);
+      // Extract and ensure suppliers is always an array
+      const suppliersData = response?.data || response;
+      setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
     } catch (error) {
       toast.error("Failed to load suppliers");
     } finally {
