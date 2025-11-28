@@ -60,7 +60,11 @@ exports.getReservationById = async (req, res) => {
 // Create reservation
 exports.createReservation = async (req, res) => {
   try {
-    const reservationData = req.body;
+    const reservationData = {
+      ...req.body,
+      // Ensure user_id is set from the authenticated user if not provided
+      user_id: req.body.user_id || req.user.user_id
+    };
 
     // Validate dates
     const startDate = new Date(reservationData.start_date);
@@ -82,10 +86,12 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    if (item.available_quantity < reservationData.quantity) {
+    // Use available_quantity if it exists, otherwise use regular quantity
+    const availableQty = item.available_quantity !== undefined ? item.available_quantity : item.quantity;
+    if (availableQty < reservationData.quantity) {
       return res.status(400).json({
         success: false,
-        message: 'Insufficient quantity available'
+        message: `Insufficient quantity available. Available: ${availableQty}, Requested: ${reservationData.quantity}`
       });
     }
 
