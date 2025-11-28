@@ -65,7 +65,7 @@ const apiLimiter = rateLimit({
 // CORS configuration with multiple origins support
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(",").map((origin) => origin.trim())
-  : ["http://localhost:3000"];
+  : ["http://localhost:3000", "http://localhost:6211"];
 
 app.use(
   cors({
