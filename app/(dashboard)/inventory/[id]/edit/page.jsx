@@ -49,6 +49,30 @@ export default function EditItemPage() {
     }
   }
 
+  // Transform item data to ensure all form fields have proper default values
+  const getFormDefaultValues = () => {
+    if (!item) return undefined;
+    
+    return {
+      name: item.name || "",
+      description: item.description || "",
+      sku: item.sku || "",
+      barcode: item.barcode || "",
+      category: item.category || "",
+      quantity: item.quantity ? item.quantity.toString() : "",
+      unit: item.unit || "",
+      unit_cost: item.unit_cost ? item.unit_cost.toString() : "",
+      selling_price: item.selling_price ? item.selling_price.toString() : "",
+      low_stock_threshold: item.low_stock_threshold ? item.low_stock_threshold.toString() : "",
+      max_stock_level: item.max_stock_level ? item.max_stock_level.toString() : "",
+      location: item.location || "",
+      supplier: item.supplier || "",
+      expiry_date: item.expiry_date ? item.expiry_date.split('T')[0] : "",
+      status: item.status || "active",
+      notes: item.notes || "",
+    };
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
   }
@@ -74,7 +98,7 @@ export default function EditItemPage() {
         </CardHeader>
         <CardContent>
           <ItemForm 
-            defaultValues={item} 
+            defaultValues={getFormDefaultValues()} 
             onSubmit={onSubmit} 
             isLoading={isLoading} 
           />

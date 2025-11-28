@@ -29,18 +29,33 @@ export default function NewAssignmentPage() {
       if (!token) return;
 
       try {
+        console.log("Fetching items and users...");
+        
         const [itemsData, usersData] = await Promise.all([
           itemsApi.getAll(token),
           usersApi.getAll(token),
         ]);
 
-        // Ensure we have arrays
-        const itemsList = Array.isArray(itemsData)
-          ? itemsData
-          : itemsData?.items || itemsData?.data || [];
-        const usersList = Array.isArray(usersData)
-          ? usersData
-          : usersData?.data || [];
+        console.log("Items API response:", itemsData);
+        console.log("Users API response:", usersData);
+
+        // Handle the response structure from our fixed API
+        let itemsList = [];
+        if (Array.isArray(itemsData)) {
+          itemsList = itemsData;
+        } else if (itemsData && itemsData.data) {
+          itemsList = Array.isArray(itemsData.data) ? itemsData.data : [];
+        }
+
+        let usersList = [];
+        if (Array.isArray(usersData)) {
+          usersList = usersData;
+        } else if (usersData && usersData.data) {
+          usersList = Array.isArray(usersData.data) ? usersData.data : [];
+        }
+
+        console.log("Final items list:", itemsList);
+        console.log("Final users list:", usersList);
 
         setItems(itemsList);
         setUsers(usersList);

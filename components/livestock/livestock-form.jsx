@@ -36,11 +36,13 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
       species: "Cow",
       breed: "",
       gender: "Male",
-      age: 0,
-      weight: 0,
+      age: "",
+      weight: "",
       health_status: "healthy",
       status: "active",
       description: "",
+      tag_number: "",
+      purchase_price: "",
     },
   })
 
