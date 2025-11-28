@@ -64,7 +64,7 @@ export default function SuppliersPage() {
     if (!token) return;
 
     try {
-      const response = await apiClient.get("/suppliers", token);
+      const response = await apiClient.get("/suppliers", {}, token);
       setSuppliers(response || []);
     } catch (error) {
       toast.error("Failed to load suppliers");
@@ -77,7 +77,7 @@ export default function SuppliersPage() {
     if (!token) return;
 
     try {
-      const response = await apiClient.get("/suppliers/stats", token);
+      const response = await apiClient.get("/suppliers/stats", {}, token);
       setStats(response.stats);
     } catch (error) {
       console.error("Failed to load stats");
