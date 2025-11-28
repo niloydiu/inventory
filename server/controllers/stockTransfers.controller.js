@@ -122,7 +122,7 @@ exports.createTransfer = async (req, res) => {
 
     const transfer = new StockTransfer({
       ...req.body,
-      initiated_by: req.user.userId,
+      initiated_by: req.user.user_id,
     });
 
     await transfer.save();
@@ -199,7 +199,7 @@ exports.approveTransfer = async (req, res) => {
     }
 
     transfer.status = "approved";
-    transfer.approved_by = req.user.userId;
+    transfer.approved_by = req.user.user_id;
     transfer.approved_date = new Date();
 
     await transfer.save();
@@ -256,7 +256,7 @@ exports.shipTransfer = async (req, res) => {
           reference_type: "StockTransfer",
           reference_id: transfer._id,
           notes: `Transfer out to ${transfer.to_location_id}: ${transfer.transfer_number}`,
-          created_by: req.user.userId,
+          created_by: req.user.user_id,
         });
       }
     }
@@ -321,13 +321,13 @@ exports.receiveTransfer = async (req, res) => {
           reference_type: "StockTransfer",
           reference_id: transfer._id,
           notes: `Transfer in from ${transfer.from_location_id}: ${transfer.transfer_number}`,
-          created_by: req.user.userId,
+          created_by: req.user.user_id,
         });
       }
     }
 
     transfer.status = "received";
-    transfer.received_by = req.user.userId;
+    transfer.received_by = req.user.user_id;
     transfer.received_date = received_date || new Date();
     if (notes) transfer.notes = (transfer.notes || "") + "\n" + notes;
 
@@ -376,7 +376,7 @@ exports.cancelTransfer = async (req, res) => {
             reference_type: "StockTransfer",
             reference_id: transfer._id,
             notes: `Transfer cancelled, items returned: ${transfer.transfer_number}`,
-            created_by: req.user.userId,
+            created_by: req.user.user_id,
           });
         }
       }

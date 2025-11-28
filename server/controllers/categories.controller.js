@@ -121,7 +121,7 @@ exports.createCategory = async (req, res) => {
 
     const category = new Category({
       ...req.body,
-      created_by: req.user.userId,
+      created_by: req.user.user_id,
     });
 
     await category.save();
@@ -189,7 +189,7 @@ exports.updateCategory = async (req, res) => {
 
     const category = await Category.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updated_by: req.user.userId },
+      { ...req.body, updated_by: req.user.user_id },
       { new: true, runValidators: true }
     ).populate("parent_id", "name code path");
 

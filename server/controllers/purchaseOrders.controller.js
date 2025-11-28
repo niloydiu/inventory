@@ -105,7 +105,7 @@ exports.createPurchaseOrder = async (req, res) => {
 
     const order = new PurchaseOrder({
       ...req.body,
-      created_by: req.user.userId,
+      created_by: req.user.user_id,
     });
 
     await order.save();
@@ -183,7 +183,7 @@ exports.approvePurchaseOrder = async (req, res) => {
     }
 
     order.status = "approved";
-    order.approved_by = req.user.userId;
+    order.approved_by = req.user.user_id;
     order.approved_date = new Date();
 
     await order.save();
@@ -244,7 +244,7 @@ exports.receivePurchaseOrder = async (req, res) => {
           reference_type: "PurchaseOrder",
           reference_id: order._id,
           notes: `Received from PO: ${order.po_number}`,
-          created_by: req.user.userId,
+          created_by: req.user.user_id,
         });
       }
     }

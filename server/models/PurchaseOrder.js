@@ -144,15 +144,14 @@ const purchaseOrderSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-purchaseOrderSchema.index({ po_number: 1 }, { unique: true });
+// Indexes (po_number already has unique: true in schema)
 purchaseOrderSchema.index({ supplier_id: 1 });
 purchaseOrderSchema.index({ status: 1 });
 purchaseOrderSchema.index({ order_date: -1 });
 purchaseOrderSchema.index({ created_by: 1 });
 
 // Auto-generate PO number
-purchaseOrderSchema.pre("save", async function (next) {
+purchaseOrderSchema.pre("save", async function () {
   if (this.isNew && !this.po_number) {
     const count = await this.constructor.countDocuments();
     const date = new Date();
@@ -160,7 +159,6 @@ purchaseOrderSchema.pre("save", async function (next) {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     this.po_number = `PO-${year}${month}-${String(count + 1).padStart(5, "0")}`;
   }
-  next();
 });
 
 module.exports = mongoose.model("PurchaseOrder", purchaseOrderSchema);

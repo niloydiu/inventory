@@ -9,8 +9,8 @@ const categorySchema = new mongoose.Schema(
     },
     code: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true,
       trim: true,
       uppercase: true,
     },
@@ -60,15 +60,14 @@ const categorySchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Indexes (code already has unique: true in schema)
 categorySchema.index({ name: 1 });
-categorySchema.index({ code: 1 }, { unique: true });
 categorySchema.index({ parent_id: 1 });
 categorySchema.index({ path: 1 });
 categorySchema.index({ status: 1 });
 
 // Update path on save
-categorySchema.pre("save", async function (next) {
+categorySchema.pre("save", async function () {
   if (this.parent_id) {
     const parent = await this.constructor.findById(this.parent_id);
     if (parent) {
@@ -79,7 +78,6 @@ categorySchema.pre("save", async function (next) {
     this.level = 0;
     this.path = this.code;
   }
-  next();
 });
 
 module.exports = mongoose.model("Category", categorySchema);

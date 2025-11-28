@@ -80,9 +80,8 @@ const supplierSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Indexes (code already has unique: true in schema)
 supplierSchema.index({ name: 1 });
-supplierSchema.index({ code: 1 }, { unique: true });
 supplierSchema.index({ status: 1 });
 
 module.exports = mongoose.model("Supplier", supplierSchema);

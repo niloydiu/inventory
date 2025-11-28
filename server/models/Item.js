@@ -9,8 +9,8 @@ const itemSchema = new mongoose.Schema(
     },
     sku: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true,
       trim: true,
       uppercase: true,
     },
@@ -228,8 +228,8 @@ const itemSchema = new mongoose.Schema(
     // Status
     status: {
       type: String,
-      enum: ["active", "inactive", "discontinued", "out_of_stock"],
-      default: "active",
+      enum: ["available", "in_use", "maintenance", "retired", "active", "inactive", "discontinued", "out_of_stock"],
+      default: "available",
     },
     notes: {
       type: String,
@@ -249,13 +249,11 @@ const itemSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for better query performance
+// Indexes for better query performance (sku already has unique: true, barcode has index: true in schema)
 itemSchema.index({ name: 1 });
-itemSchema.index({ sku: 1 }, { unique: true });
 itemSchema.index({ category_id: 1 });
 itemSchema.index({ category: 1 });
 itemSchema.index({ status: 1 });
-itemSchema.index({ barcode: 1 });
 itemSchema.index({ serial_number: 1 });
 itemSchema.index({ location_id: 1 });
 itemSchema.index({ supplier_id: 1 });
@@ -273,7 +271,7 @@ itemSchema.virtual("stock_status").get(function () {
 });
 
 // Auto-generate SKU if not provided
-itemSchema.pre("save", async function (next) {
+itemSchema.pre("save", async function () {
   if (this.isNew && !this.sku) {
     const count = await this.constructor.countDocuments();
     const prefix = this.category
@@ -284,8 +282,6 @@ itemSchema.pre("save", async function (next) {
 
   // Update reserved quantity
   this.available_quantity = this.quantity - (this.reserved_quantity || 0);
-
-  next();
 });
 
 // Ensure virtuals are included in JSON
