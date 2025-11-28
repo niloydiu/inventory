@@ -164,6 +164,16 @@ exports.createFeed = async (req, res) => {
     });
   } catch (error) {
     console.error('Create feed error:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join(', ')
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Failed to create feed'
@@ -259,6 +269,16 @@ exports.updateFeed = async (req, res) => {
     });
   } catch (error) {
     console.error('Update feed error:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join(', ')
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Failed to update feed'
