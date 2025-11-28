@@ -1,20 +1,9 @@
-require('dotenv').config();
-const app = require('./app');
-const pool = require('./config/database');
+require("dotenv").config();
+const app = require("./app");
 
 const PORT = process.env.API_PORT || 5000;
 
-// Test database connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('❌ Database connection failed:', err.message);
-    console.error('Please ensure PostgreSQL is running and DATABASE_URL is configured correctly');
-  } else {
-    console.log('✅ Database connected successfully');
-  }
-});
-
-// Start server
+// Start server (MongoDB connection is handled in app.js)
 const server = app.listen(PORT, () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   console.log(`📊 API endpoint: http://localhost:${PORT}/api/v1`);
@@ -23,13 +12,10 @@ const server = app.listen(PORT, () => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
+process.on("SIGTERM", () => {
+  console.log("SIGTERM signal received: closing HTTP server");
   server.close(() => {
-    console.log('HTTP server closed');
-    pool.end(() => {
-      console.log('Database pool closed');
-      process.exit(0);
-    });
+    console.log("HTTP server closed");
+    process.exit(0);
   });
 });

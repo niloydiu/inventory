@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable caching in development
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
   images: {
     remotePatterns: [
       {
@@ -10,16 +15,32 @@ const nextConfig = {
       },
     ],
   },
-  // API routes will be handled by Vercel serverless functions
+  // Add headers to disable caching
+  async headers() {
+    return [
+      {
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, private",
+          },
+          { key: "Pragma", value: "no-cache" },
+          { key: "Expires", value: "0" },
+        ],
+      },
+    ];
+  },
+  // API routes will be handled by custom server
   async rewrites() {
     return [
       {
-        source: '/api/v1/:path*',
-        destination: '/api/:path*',
+        source: "/api/v1/:path*",
+        destination: "/api/:path*",
       },
       {
-        source: '/health',
-        destination: '/api/health',
+        source: "/health",
+        destination: "/api/health",
       },
     ];
   },
