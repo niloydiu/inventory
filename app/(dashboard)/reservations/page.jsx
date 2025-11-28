@@ -69,7 +69,9 @@ export default function ReservationsPage() {
       if (result.success) {
         // Ensure reservations is always an array
         const reservationsData = result.data;
-        setReservations(Array.isArray(reservationsData) ? reservationsData : []);
+        setReservations(
+          Array.isArray(reservationsData) ? reservationsData : []
+        );
       } else {
         toast.error(result.error || "Failed to load reservations");
       }

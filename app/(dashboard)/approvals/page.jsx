@@ -203,10 +203,10 @@ export default function ApprovalsPage() {
           <Button
             onClick={() => {
               setFormDialog("new");
-              setFormData({ 
-                status: "pending", 
+              setFormData({
+                status: "pending",
                 priority: "medium",
-                request_type: "purchase"
+                request_type: "purchase",
               });
             }}
           >
