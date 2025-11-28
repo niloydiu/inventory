@@ -62,55 +62,40 @@ const apiLimiter = rateLimit({
   validate: { trustProxy: false }, // Disable trust proxy validation warning
 });
 
-// CORS configuration with multiple origins support
-const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(",").map((origin) => {
-      // Remove trailing slash and trim
-      return origin.trim().replace(/\/$/, "");
-    })
-  : ["http://localhost:3000", "http://localhost:6211"];
+// CORS configuration - Allow ALL origins (*) to fix CORS issues
+// WARNING: This allows requests from any origin. Restrict in production for security.
+console.log("🌐 CORS: Allowing ALL origins (*) - Open for debugging");
 
-// Log allowed origins in development
-if (process.env.NODE_ENV !== "production") {
-  console.log("🌐 Allowed CORS origins:", allowedOrigins);
-}
-
+// CORS middleware - Allow everything
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, Postman, etc.)
-      if (!origin) return callback(null, true);
-
-      // Normalize origin (remove trailing slash)
-      const normalizedOrigin = origin.replace(/\/$/, "");
-
-      // Check exact match
-      if (allowedOrigins.indexOf(normalizedOrigin) !== -1) {
-        return callback(null, true);
-      }
-
-      // Check if origin matches any allowed origin (case-insensitive, protocol flexible)
-      const isAllowed = allowedOrigins.some((allowed) => {
-        const allowedNormalized = allowed.replace(/\/$/, "");
-        // Match domain regardless of protocol (http/https)
-        const allowedDomain = allowedNormalized.replace(/^https?:\/\//, "");
-        const originDomain = normalizedOrigin.replace(/^https?:\/\//, "");
-        return allowedDomain === originDomain;
-      });
-
-      if (isAllowed) {
-        return callback(null, true);
-      }
-
-      // Log CORS error for debugging
-      console.warn(`⚠️  CORS blocked: ${normalizedOrigin}. Allowed:`, allowedOrigins);
-      return callback(new Error(`Not allowed by CORS: ${normalizedOrigin}`), false);
+      // Allow ALL origins - no restrictions
+      console.log(`✅ CORS: Allowing request from: ${origin || "no origin"}`);
+      return callback(null, true);
     },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    credentials: true, // Allow credentials (cookies, authorization headers)
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    allowedHeaders: [
+      "Content-Type", 
+      "Authorization", 
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers",
+      "Cookie",
+      "Set-Cookie",
+      "X-Forwarded-For"
+    ],
+    exposedHeaders: [
+      "Content-Range", 
+      "X-Content-Range",
+      "Set-Cookie"
+    ],
     maxAge: 86400, // 24 hours
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
 
