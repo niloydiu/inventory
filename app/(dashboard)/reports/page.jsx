@@ -31,6 +31,12 @@ export default function ReportsPage() {
     fetchReports()
   }, [token])
 
+  useEffect(() => {
+    if (token) {
+      fetchReports()
+    }
+  }, [threshold, token])
+
   async function fetchReports() {
     if (!token) return
     
@@ -135,7 +141,8 @@ export default function ReportsPage() {
                   type="number"
                   value={threshold}
                   onChange={(e) => setThreshold(parseInt(e.target.value) || 10)}
-                  onBlur={fetchReports}
+                  min="1"
+                  max="1000"
                   className="w-20"
                 />
               </div>
