@@ -258,9 +258,9 @@ exports.shipTransfer = async (req, res) => {
       return res.status(404).json({ message: "Transfer not found" });
     }
 
-    if (transfer.status !== "approved") {
+    if (!["pending", "approved"].includes(transfer.status)) {
       return res.status(400).json({
-        message: "Only approved transfers can be shipped",
+        message: "Only pending or approved transfers can be shipped",
       });
     }
 
@@ -282,14 +282,16 @@ exports.shipTransfer = async (req, res) => {
         // Create stock movement for shipment
         await StockMovement.create({
           item_id: item._id,
-          location_id: transfer.from_location_id,
           movement_type: "transfer_out",
-          quantity: -transferItem.quantity_sent,
-          quantity_after: item.quantity,
-          reference_type: "StockTransfer",
+          quantity: transferItem.quantity_sent,
+          from_location_id: transfer.from_location_id,
+          to_location_id: transfer.to_location_id,
+          reference_type: "transfer",
           reference_id: transfer._id,
-          notes: `Transfer out to ${transfer.to_location_id}: ${transfer.transfer_number}`,
-          created_by: req.user.user_id,
+          reference_number: transfer.transfer_number,
+          performed_by: req.user.userId || req.user.user_id,
+          notes: `Transfer shipped to ${transfer.to_location_id?.name || 'destination'}: ${transfer.transfer_number}`,
+          balance_after: item.quantity,
         });
       }
     }
@@ -325,8 +327,14 @@ exports.receiveTransfer = async (req, res) => {
       });
     }
 
+    // If no received_items provided, auto-receive all sent items
+    const itemsToReceive = received_items || transfer.items.map(item => ({
+      item_id: item.item_id,
+      quantity_received: item.quantity_sent
+    }));
+
     // Update received quantities and add to destination inventory
-    for (const receivedItem of received_items) {
+    for (const receivedItem of itemsToReceive) {
       const transferItem = transfer.items.find(
         (item) => item.item_id.toString() === receivedItem.item_id
       );
@@ -347,14 +355,16 @@ exports.receiveTransfer = async (req, res) => {
         // Create stock movement for receipt
         await StockMovement.create({
           item_id: item._id,
-          location_id: transfer.to_location_id,
           movement_type: "transfer_in",
           quantity: quantityToReceive,
-          quantity_after: item.quantity,
-          reference_type: "StockTransfer",
+          from_location_id: transfer.from_location_id,
+          to_location_id: transfer.to_location_id,
+          reference_type: "transfer",
           reference_id: transfer._id,
-          notes: `Transfer in from ${transfer.from_location_id}: ${transfer.transfer_number}`,
-          created_by: req.user.user_id,
+          reference_number: transfer.transfer_number,
+          performed_by: req.user.userId || req.user.user_id,
+          notes: `Transfer received from ${transfer.from_location_id?.name || 'source'}: ${transfer.transfer_number}`,
+          balance_after: item.quantity,
         });
       }
     }
@@ -402,14 +412,16 @@ exports.cancelTransfer = async (req, res) => {
           // Create stock movement for return
           await StockMovement.create({
             item_id: item._id,
-            location_id: transfer.from_location_id,
-            movement_type: "adjustment",
+            movement_type: "transfer_in",
             quantity: transferItem.quantity_sent,
-            quantity_after: item.quantity,
-            reference_type: "StockTransfer",
+            from_location_id: transfer.to_location_id,
+            to_location_id: transfer.from_location_id,
+            reference_type: "transfer",
             reference_id: transfer._id,
+            reference_number: transfer.transfer_number,
+            performed_by: req.user.userId || req.user.user_id,
             notes: `Transfer cancelled, items returned: ${transfer.transfer_number}`,
-            created_by: req.user.user_id,
+            balance_after: item.quantity,
           });
         }
       }

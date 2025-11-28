@@ -43,8 +43,10 @@ import {
   Trash,
   Eye,
   Truck,
+  Package,
   CheckCircle,
   XCircle,
+  Activity,
 } from "lucide-react";
 import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
@@ -169,13 +171,44 @@ export default function StockTransfersPage() {
     }
   }
 
-  async function handleComplete(id) {
+  async function handleShip(id) {
     try {
-      await apiClient.post(`/stock-transfers/${id}/complete`, {}, token);
-      toast.success("Transfer completed");
+      await apiClient.post(`/stock-transfers/${id}/ship`, {}, token);
+      toast.success("Transfer shipped");
       fetchTransfers();
     } catch (error) {
-      toast.error("Failed to complete transfer");
+      toast.error("Failed to ship transfer");
+    }
+  }
+
+  async function handleReceive(id) {
+    try {
+      // Get transfer details to create received_items array
+      const transfer = transfers.find(t => t._id === id);
+      const received_items = transfer.items.map(item => ({
+        item_id: item.item_id._id || item.item_id,
+        quantity_received: item.quantity_sent || item.quantity_requested
+      }));
+      
+      await apiClient.post(`/stock-transfers/${id}/receive`, {
+        received_items,
+        received_date: new Date().toISOString()
+      }, token);
+      toast.success("Transfer received");
+      fetchTransfers();
+    } catch (error) {
+      toast.error("Failed to receive transfer");
+    }
+  }
+
+  async function handleCancel(id) {
+    if (!confirm("Are you sure you want to cancel this transfer?")) return;
+    try {
+      await apiClient.post(`/stock-transfers/${id}/cancel`, {}, token);
+      toast.success("Transfer cancelled");
+      fetchTransfers();
+    } catch (error) {
+      toast.error("Failed to cancel transfer");
     }
   }
 
@@ -236,8 +269,8 @@ export default function StockTransfersPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-5">
-          {["pending", "approved", "in_transit", "completed", "cancelled"].map(
+        <div className="grid gap-4 md:grid-cols-6">
+          {["draft", "pending", "in_transit", "partially_received", "received", "cancelled"].map(
             (status) => (
               <Card key={status}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -313,12 +346,15 @@ export default function StockTransfersPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          
+                          {/* Pending status: can approve or edit */}
                           {transfer.status === "pending" && (
                             <>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleApprove(transfer._id)}
+                                title="Approve"
                               >
                                 <CheckCircle className="h-4 w-4 text-green-600" />
                               </Button>
@@ -326,27 +362,72 @@ export default function StockTransfersPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => openEditDialog(transfer)}
+                                title="Edit"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </>
                           )}
+                          
+                          {/* Draft status: can edit */}
+                          {transfer.status === "draft" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(transfer)}
+                              title="Edit"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                          {/* Approved status: can ship */}
+                          {(transfer.status === "approved" || transfer.status === "pending") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleShip(transfer._id)}
+                              title="Ship"
+                            >
+                              <Truck className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          )}
+
+                          {/* In Transit status: can receive */}
                           {transfer.status === "in_transit" && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleComplete(transfer._id)}
+                              onClick={() => handleReceive(transfer._id)}
+                              title="Receive"
                             >
-                              <CheckCircle className="h-4 w-4 text-blue-600" />
+                              <Package className="h-4 w-4 text-purple-600" />
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(transfer._id)}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
+
+                          {/* Can cancel if not received */}
+                          {!["received", "cancelled"].includes(transfer.status) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCancel(transfer._id)}
+                              title="Cancel"
+                            >
+                              <XCircle className="h-4 w-4 text-red-600" />
+                            </Button>
+                          )}
+
+                          {/* Can delete if draft or cancelled */}
+                          {["draft", "cancelled"].includes(transfer.status) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(transfer._id)}
+                              title="Delete"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -442,6 +523,19 @@ export default function StockTransfersPage() {
                     <p className="whitespace-pre-wrap">{viewDialog.notes}</p>
                   </div>
                 )}
+
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      // Navigate to stock movements page filtered by this transfer
+                      window.location.href = `/stock-movements?transfer_id=${viewDialog._id}`;
+                    }}
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    View Related Movements
+                  </Button>
+                </div>
               </div>
             )}
           </DialogContent>
