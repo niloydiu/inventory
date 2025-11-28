@@ -34,7 +34,7 @@ export function StatsCards({ stats }) {
           <AlertTriangle className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-amber-500">{stats?.low_stock_count || 0}</div>
+          <div className="text-2xl font-bold text-amber-500">{stats?.low_stock_count || stats?.low_stock || 0}</div>
           <p className="text-xs text-muted-foreground">
             Items below minimum level
           </p>
