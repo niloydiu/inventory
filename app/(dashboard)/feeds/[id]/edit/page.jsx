@@ -49,6 +49,25 @@ export default function EditFeedPage() {
     }
   }
 
+  // Transform feed data to ensure all form fields have proper default values
+  const getFormDefaultValues = () => {
+    if (!feed) return undefined;
+    
+    return {
+      name: feed.name || "",
+      feed_type: feed.feed_type || "Other",
+      quantity: feed.quantity ? feed.quantity.toString() : "",
+      unit_type: feed.unit_type || "",
+      unit_cost: feed.unit_cost ? feed.unit_cost.toString() : "",
+      supplier_id: feed.supplier_id || "",
+      production_date: feed.production_date ? feed.production_date.split('T')[0] : "",
+      expiry_date: feed.expiry_date ? feed.expiry_date.split('T')[0] : "",
+      nutritional_info: feed.nutritional_info || "",
+      storage_location: feed.storage_location || "",
+      notes: feed.notes || "",
+    };
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
   }
@@ -74,7 +93,7 @@ export default function EditFeedPage() {
         </CardHeader>
         <CardContent>
           <FeedForm 
-            defaultValues={feed} 
+            defaultValues={getFormDefaultValues()} 
             onSubmit={onSubmit} 
             isLoading={isLoading} 
           />
