@@ -121,9 +121,23 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Unit Type *</FormLabel>
-                <FormControl>
-                  <Input placeholder="kg, ton, bag, sack" {...field} />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select unit type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                    <SelectItem value="lbs">Pounds (lbs)</SelectItem>
+                    <SelectItem value="bags">Bags</SelectItem>
+                    <SelectItem value="tons">Tons</SelectItem>
+                    <SelectItem value="liters">Liters</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
