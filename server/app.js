@@ -135,6 +135,7 @@ const categoriesRoutes = require("./routes/categories.routes");
 const stockTransfersRoutes = require("./routes/stockTransfers.routes");
 const stockMovementsRoutes = require("./routes/stockMovements.routes");
 const notificationsRoutes = require("./routes/notifications.routes");
+const productAssignmentsRoutes = require("./routes/productAssignments.routes");
 
 // API routes
 const API_PREFIX = "/api/v1";
@@ -166,6 +167,7 @@ app.use(`${API_PREFIX}/categories`, categoriesRoutes);
 app.use(`${API_PREFIX}/stock-transfers`, stockTransfersRoutes);
 app.use(`${API_PREFIX}/stock-movements`, stockMovementsRoutes);
 app.use(`${API_PREFIX}/notifications`, notificationsRoutes);
+app.use(`${API_PREFIX}/product-assignments`, productAssignmentsRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

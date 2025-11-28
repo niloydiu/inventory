@@ -1,53 +1,29 @@
 const Supplier = require("../models/Supplier");
 const { validationResult } = require("express-validator");
+const { paginatedQuery } = require("../utils/queryHelpers");
 
 // Get all suppliers with pagination and filtering
 exports.getAllSuppliers = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      status,
-      sort = "-created_at",
-    } = req.query;
-
-    const query = {};
-
-    // Search by name, code, email, or phone
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { supplier_code: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    // Filter by status
-    if (status) {
-      query.status = status;
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const [suppliers, total] = await Promise.all([
-      Supplier.find(query).sort(sort).skip(skip).limit(parseInt(limit)).lean(),
-      Supplier.countDocuments(query),
+    const result = await paginatedQuery(Supplier, req.query, [
+      "name",
+      "supplier_code",
+      "email",
+      "phone",
+      "contact_person",
     ]);
 
     res.json({
-      suppliers,
-      pagination: {
-        current_page: parseInt(page),
-        total_pages: Math.ceil(total / parseInt(limit)),
-        total_items: total,
-        items_per_page: parseInt(limit),
-      },
+      success: true,
+      ...result,
     });
   } catch (error) {
     console.error("[Suppliers Controller] Error getting suppliers:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 

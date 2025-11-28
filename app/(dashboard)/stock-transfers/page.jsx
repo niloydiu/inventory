@@ -77,7 +77,7 @@ export default function StockTransfersPage() {
   async function fetchTransfers() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/stock-transfers", {}, token);
+      const response = await apiClient.get("/stock-transfers", {}, token);
       setTransfers(Array.isArray(response) ? response : response?.data || []);
     } catch (error) {
       toast.error("Failed to load stock transfers");
@@ -89,7 +89,7 @@ export default function StockTransfersPage() {
   async function fetchLocations() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/locations", {}, token);
+      const response = await apiClient.get("/locations", {}, token);
       setLocations(Array.isArray(response) ? response : response?.data || []);
     } catch (error) {
       console.error("Failed to load locations");
@@ -119,11 +119,11 @@ export default function StockTransfersPage() {
       };
 
       if (formDialog === "new") {
-        await apiClient.post("/api/stock-transfers", dataToSubmit, token);
+        await apiClient.post("/stock-transfers", dataToSubmit, token);
         toast.success("Stock transfer created successfully");
       } else {
         await apiClient.put(
-          `/api/stock-transfers/${formDialog}`,
+          `/stock-transfers/${formDialog}`,
           dataToSubmit,
           token
         );
@@ -142,7 +142,7 @@ export default function StockTransfersPage() {
   async function handleDelete(id) {
     if (!confirm("Are you sure you want to delete this transfer?")) return;
     try {
-      await apiClient.delete(`/api/stock-transfers/${id}`, token);
+      await apiClient.delete(`/stock-transfers/${id}`, token);
       toast.success("Transfer deleted successfully");
       fetchTransfers();
     } catch (error) {
@@ -152,7 +152,7 @@ export default function StockTransfersPage() {
 
   async function handleApprove(id) {
     try {
-      await apiClient.post(`/api/stock-transfers/${id}/approve`, {}, token);
+      await apiClient.post(`/stock-transfers/${id}/approve`, {}, token);
       toast.success("Transfer approved");
       fetchTransfers();
     } catch (error) {
@@ -162,7 +162,7 @@ export default function StockTransfersPage() {
 
   async function handleComplete(id) {
     try {
-      await apiClient.post(`/api/stock-transfers/${id}/complete`, {}, token);
+      await apiClient.post(`/stock-transfers/${id}/complete`, {}, token);
       toast.success("Transfer completed");
       fetchTransfers();
     } catch (error) {

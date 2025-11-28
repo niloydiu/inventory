@@ -25,6 +25,7 @@ import {
   Truck,
   Activity,
   Bell,
+  PackageCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -51,6 +52,12 @@ const sidebarItems = [
     name: "Assignments",
     href: "/assignments",
     icon: UserCheck,
+    roles: ["admin", "manager", "employee"],
+  },
+  {
+    name: "Product Assignments",
+    href: "/product-assignments",
+    icon: PackageCheck,
     roles: ["admin", "manager", "employee"],
   },
   {

@@ -94,7 +94,7 @@ export default function StockMovementsPage() {
       });
 
       const response = await apiClient.get(
-        `/api/stock-movements?${queryParams}`,
+        `/stock-movements?${queryParams}`,
         {},
         token
       );

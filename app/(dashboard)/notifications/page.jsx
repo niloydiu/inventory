@@ -68,7 +68,7 @@ export default function NotificationsPage() {
   async function fetchNotifications() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/notifications", {}, token);
+      const response = await apiClient.get("/notifications", {}, token);
       setNotifications(
         Array.isArray(response) ? response : response?.data || []
       );
@@ -81,7 +81,7 @@ export default function NotificationsPage() {
 
   async function handleMarkAsRead(id) {
     try {
-      await apiClient.post(`/api/notifications/${id}/read`, {}, token);
+      await apiClient.post(`/notifications/${id}/read`, {}, token);
       toast.success("Notification marked as read");
       fetchNotifications();
     } catch (error) {
@@ -91,7 +91,7 @@ export default function NotificationsPage() {
 
   async function handleMarkAsUnread(id) {
     try {
-      await apiClient.post(`/api/notifications/${id}/unread`, {}, token);
+      await apiClient.post(`/notifications/${id}/unread`, {}, token);
       toast.success("Notification marked as unread");
       fetchNotifications();
     } catch (error) {
@@ -101,7 +101,7 @@ export default function NotificationsPage() {
 
   async function handleMarkAllAsRead() {
     try {
-      await apiClient.post("/api/notifications/mark-all-read", {}, token);
+      await apiClient.post("/notifications/mark-all-read", {}, token);
       toast.success("All notifications marked as read");
       fetchNotifications();
     } catch (error) {
@@ -112,7 +112,7 @@ export default function NotificationsPage() {
   async function handleDelete(id) {
     if (!confirm("Are you sure you want to delete this notification?")) return;
     try {
-      await apiClient.delete(`/api/notifications/${id}`, token);
+      await apiClient.delete(`/notifications/${id}`, token);
       toast.success("Notification deleted");
       fetchNotifications();
     } catch (error) {

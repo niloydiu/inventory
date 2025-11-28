@@ -78,7 +78,7 @@ export default function PurchaseOrdersPage() {
   async function fetchPurchaseOrders() {
     if (!token) return;
     try {
-      const response = await apiClient.get("/api/purchase-orders", {}, token);
+      const response = await apiClient.get("/purchase-orders", {}, token);
       setPurchaseOrders(
         Array.isArray(response) ? response : response?.data || []
       );
@@ -126,11 +126,11 @@ export default function PurchaseOrdersPage() {
       };
 
       if (formDialog === "new") {
-        await apiClient.post("/api/purchase-orders", dataToSubmit, token);
+        await apiClient.post("/purchase-orders", dataToSubmit, token);
         toast.success("Purchase order created successfully");
       } else {
         await apiClient.put(
-          `/api/purchase-orders/${formDialog}`,
+          `/purchase-orders/${formDialog}`,
           dataToSubmit,
           token
         );
@@ -150,7 +150,7 @@ export default function PurchaseOrdersPage() {
     if (!confirm("Are you sure you want to delete this purchase order?"))
       return;
     try {
-      await apiClient.delete(`/api/purchase-orders/${id}`, token);
+      await apiClient.delete(`/purchase-orders/${id}`, token);
       toast.success("Purchase order deleted successfully");
       fetchPurchaseOrders();
     } catch (error) {
@@ -160,7 +160,7 @@ export default function PurchaseOrdersPage() {
 
   async function handleApprove(id) {
     try {
-      await apiClient.post(`/api/purchase-orders/${id}/approve`, {}, token);
+      await apiClient.post(`/purchase-orders/${id}/approve`, {}, token);
       toast.success("Purchase order approved");
       fetchPurchaseOrders();
     } catch (error) {
@@ -170,7 +170,7 @@ export default function PurchaseOrdersPage() {
 
   async function handleReceive(id) {
     try {
-      await apiClient.post(`/api/purchase-orders/${id}/receive`, {}, token);
+      await apiClient.post(`/purchase-orders/${id}/receive`, {}, token);
       toast.success("Purchase order received");
       fetchPurchaseOrders();
     } catch (error) {
