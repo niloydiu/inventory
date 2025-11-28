@@ -55,16 +55,18 @@ export default function EditFeedPage() {
     
     return {
       name: feed.name || "",
-      feed_type: feed.feed_type || "Other",
-      quantity: feed.quantity ? feed.quantity.toString() : "",
-      unit_type: feed.unit_type || "",
-      unit_cost: feed.unit_cost ? feed.unit_cost.toString() : "",
-      supplier_id: feed.supplier_id || "",
+      feed_type: feed.feed_type || "Cattle Feed",
+      quantity: feed.quantity || 0,
+      unit_type: feed.unit_type || "kg",
+      cost_price: feed.cost_price || 0,
+      unit_price: feed.unit_price || 0,
+      minimum_level: feed.minimum_level || 0,
+      alert_enabled: feed.alert_enabled !== undefined ? feed.alert_enabled : true,
+      description: feed.description || "",
       production_date: feed.production_date ? feed.production_date.split('T')[0] : "",
       expiry_date: feed.expiry_date ? feed.expiry_date.split('T')[0] : "",
-      nutritional_info: feed.nutritional_info || "",
-      storage_location: feed.storage_location || "",
-      notes: feed.notes || "",
+      batch_number: feed.batch_number || "",
+      supplier_name: feed.supplier_name || "",
     };
   };
 
