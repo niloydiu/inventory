@@ -110,14 +110,14 @@ export default function StockMovementsPage() {
   useEffect(() => {
     // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const transferId = urlParams.get('transfer_id');
-    
+    const transferId = urlParams.get("transfer_id");
+
     if (transferId) {
       // Filter by transfer reference
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
         reference_id: transferId,
-        reference_type: "transfer"
+        reference_type: "transfer",
       }));
     }
 
@@ -154,16 +154,20 @@ export default function StockMovementsPage() {
         {},
         token
       );
-      
-      let movements = Array.isArray(response) ? response : response?.movements || [];
-      
+
+      let movements = Array.isArray(response)
+        ? response
+        : response?.movements || [];
+
       // Client-side filtering for transfer type (includes transfer_in and transfer_out)
       if (filters.movement_type === "transfer") {
-        movements = movements.filter(m => 
-          m.movement_type === "transfer_in" || m.movement_type === "transfer_out"
+        movements = movements.filter(
+          (m) =>
+            m.movement_type === "transfer_in" ||
+            m.movement_type === "transfer_out"
         );
       }
-      
+
       setMovements(movements);
     } catch (error) {
       console.error("Failed to load stock movements:", error);
@@ -208,20 +212,22 @@ export default function StockMovementsPage() {
       reference_id: "",
     });
     // Clear URL parameters
-    window.history.replaceState({}, '', window.location.pathname);
+    window.history.replaceState({}, "", window.location.pathname);
   }
 
   const stats = {
     total: movements.length,
     purchases: movements.filter((m) => m.movement_type === "purchase").length,
     sales: movements.filter((m) => m.movement_type === "sale").length,
-    transfers: movements.filter((m) => 
-      m.movement_type === "transfer_in" || m.movement_type === "transfer_out"
+    transfers: movements.filter(
+      (m) =>
+        m.movement_type === "transfer_in" || m.movement_type === "transfer_out"
     ).length,
-    adjustments: movements.filter((m) => 
-      m.movement_type === "adjustment_increase" || 
-      m.movement_type === "adjustment_decrease" ||
-      m.movement_type?.includes("adjustment")
+    adjustments: movements.filter(
+      (m) =>
+        m.movement_type === "adjustment_increase" ||
+        m.movement_type === "adjustment_decrease" ||
+        m.movement_type?.includes("adjustment")
     ).length,
   };
 
@@ -329,8 +335,12 @@ export default function StockMovementsPage() {
                     <SelectItem value="transfer">Transfer (All)</SelectItem>
                     <SelectItem value="transfer_in">Transfer In</SelectItem>
                     <SelectItem value="transfer_out">Transfer Out</SelectItem>
-                    <SelectItem value="adjustment_increase">Adjustment +</SelectItem>
-                    <SelectItem value="adjustment_decrease">Adjustment -</SelectItem>
+                    <SelectItem value="adjustment_increase">
+                      Adjustment +
+                    </SelectItem>
+                    <SelectItem value="adjustment_decrease">
+                      Adjustment -
+                    </SelectItem>
                     <SelectItem value="return">Return</SelectItem>
                     <SelectItem value="damage">Damage</SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
@@ -392,7 +402,9 @@ export default function StockMovementsPage() {
                   <SelectContent>
                     <SelectItem value="all">All references</SelectItem>
                     <SelectItem value="transfer">Transfer</SelectItem>
-                    <SelectItem value="purchase_order">Purchase Order</SelectItem>
+                    <SelectItem value="purchase_order">
+                      Purchase Order
+                    </SelectItem>
                     <SelectItem value="sale_order">Sale Order</SelectItem>
                     <SelectItem value="adjustment">Adjustment</SelectItem>
                     <SelectItem value="assignment">Assignment</SelectItem>
@@ -420,126 +432,225 @@ export default function StockMovementsPage() {
                 />
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex items-center justify-between mt-4">
               <Button variant="outline" onClick={clearFilters}>
                 Clear All Filters
               </Button>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <span>Showing {movements.length} movements</span>
+                <Calendar className="h-4 w-4" />
+                <span>
+                  Showing{" "}
+                  <span className="font-semibold text-foreground">
+                    {movements.length}
+                  </span>{" "}
+                  movement{movements.length !== 1 ? "s" : ""}
+                  {filters.start_date && filters.end_date && (
+                    <span>
+                      {" "}
+                      from {format(
+                        new Date(filters.start_date),
+                        "MMM dd"
+                      )} to {format(new Date(filters.end_date), "MMM dd")}
+                    </span>
+                  )}
+                </span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Debug Info */}
-        {process.env.NODE_ENV === 'development' && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">
-                <p>Debug Info:</p>
-                <p>Total movements: {movements.length}</p>
-                <p>Current filters: {JSON.stringify(filters)}</p>
-                <p>Loading: {loading.toString()}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Movements Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Movement History</CardTitle>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Movement History</CardTitle>
+                <CardDescription className="mt-1">
+                  Complete log of all inventory stock movements
+                </CardDescription>
+              </div>
+              {movements.length > 0 && (
+                <Badge variant="secondary" className="text-base px-3 py-1">
+                  {movements.length}{" "}
+                  {movements.length === 1 ? "Record" : "Records"}
+                </Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {movements.map((movement) => {
-                    const Icon =
-                      movementTypeIcons[movement.movement_type] || Activity;
-                    return (
-                      <TableRow key={movement._id}>
-                        <TableCell>
-                          {movement.movement_date
-                            ? format(
-                                new Date(movement.movement_date),
-                                "MMM dd, yyyy HH:mm"
-                              )
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={
-                              movementTypeColors[movement.movement_type]
-                            }
-                            variant="outline"
-                          >
-                            <Icon className="mr-1 h-3 w-3" />
-                            {formatMovementType(movement.movement_type)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {movement.item_id?.name || "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={
-                              movement.quantity_change > 0
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }
-                          >
-                            {movement.quantity_change > 0 ? "+" : ""}
-                            {movement.quantity_change}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {movement.movement_type === "transfer_out" 
-                            ? `From: ${movement.from_location_id?.name || "N/A"}`
-                            : movement.movement_type === "transfer_in"
-                            ? `To: ${movement.to_location_id?.name || "N/A"}`
-                            : movement.location_id?.name || movement.to_location_id?.name || movement.from_location_id?.name || "N/A"
-                          }
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {movement.reference_number || movement.reference || "N/A"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewDialog(movement)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {movements.length === 0 && (
+            {movements.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Activity className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  No movements found
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  {Object.values(filters).some((v) => v && v !== "all")
+                    ? "Try adjusting your filters to see more results."
+                    : "Stock movements will appear here as items are purchased, transferred, or adjusted."}
+                </p>
+                {Object.values(filters).some((v) => v && v !== "all") && (
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={clearFilters}
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell
-                        colSpan={7}
-                        className="text-center text-muted-foreground"
-                      >
-                        No stock movements found
-                      </TableCell>
+                      <TableHead className="w-[180px]">Date & Time</TableHead>
+                      <TableHead className="w-[200px]">Type</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead className="w-[120px] text-center">
+                        Quantity
+                      </TableHead>
+                      <TableHead className="w-[180px]">Location</TableHead>
+                      <TableHead className="w-[140px]">Reference</TableHead>
+                      <TableHead className="w-[100px] text-right">
+                        Actions
+                      </TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {movements.map((movement) => {
+                      const Icon =
+                        movementTypeIcons[movement.movement_type] || Activity;
+                      return (
+                        <TableRow key={movement._id}>
+                          <TableCell className="font-mono text-sm">
+                            <div className="flex flex-col">
+                              <span className="font-semibold">
+                                {movement.movement_date
+                                  ? format(
+                                      new Date(movement.movement_date),
+                                      "MMM dd, yyyy"
+                                    )
+                                  : "N/A"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {movement.movement_date
+                                  ? format(
+                                      new Date(movement.movement_date),
+                                      "HH:mm:ss"
+                                    )
+                                  : ""}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                movementTypeColors[movement.movement_type]
+                              }
+                              variant="outline"
+                            >
+                              <Icon className="mr-1 h-3 w-3" />
+                              {formatMovementType(movement.movement_type)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {movement.item_id?.name || "Unknown Item"}
+                              </span>
+                              {movement.item_id?.sku && (
+                                <span className="text-xs text-muted-foreground">
+                                  SKU: {movement.item_id.sku}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex flex-col items-center">
+                              <span
+                                className={`text-lg font-bold ${
+                                  movement.quantity_change > 0
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {movement.quantity_change > 0 ? "+" : ""}
+                                {movement.quantity_change}
+                              </span>
+                              {movement.item_id?.unit && (
+                                <span className="text-xs text-muted-foreground">
+                                  {movement.item_id.unit}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {movement.movement_type === "transfer_out" ? (
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground text-xs">
+                                    From:
+                                  </span>
+                                  <span className="font-medium">
+                                    {movement.from_location_id?.name ||
+                                      "Unknown"}
+                                  </span>
+                                </div>
+                              ) : movement.movement_type === "transfer_in" ? (
+                                <div className="flex flex-col">
+                                  <span className="text-muted-foreground text-xs">
+                                    To:
+                                  </span>
+                                  <span className="font-medium">
+                                    {movement.to_location_id?.name || "Unknown"}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="font-medium">
+                                  {movement.location_id?.name ||
+                                    movement.to_location_id?.name ||
+                                    movement.from_location_id?.name ||
+                                    "Unknown"}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {movement.reference_number || movement.reference ? (
+                              <div className="flex flex-col">
+                                <span className="font-mono text-xs">
+                                  {movement.reference_number ||
+                                    movement.reference}
+                                </span>
+                                {movement.reference_type && (
+                                  <span className="text-xs text-muted-foreground capitalize">
+                                    {movement.reference_type.replace("_", " ")}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">
+                                —
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setViewDialog(movement)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -587,68 +698,120 @@ export default function StockMovementsPage() {
                     <Label className="text-muted-foreground">
                       Quantity Change
                     </Label>
-                    <p
-                      className={`text-2xl font-bold mt-1 ${
-                        viewDialog.quantity_change > 0
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {viewDialog.quantity_change > 0 ? "+" : ""}
-                      {viewDialog.quantity_change}
-                    </p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <p
+                        className={`text-2xl font-bold ${
+                          viewDialog.quantity_change > 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {viewDialog.quantity_change > 0 ? "+" : ""}
+                        {viewDialog.quantity_change}
+                      </p>
+                      {viewDialog.item_id?.unit && (
+                        <span className="text-sm text-muted-foreground">
+                          {viewDialog.item_id.unit}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {viewDialog.item_id?.sku && (
+                  <div>
+                    <Label className="text-muted-foreground">SKU</Label>
+                    <p className="font-mono mt-1">{viewDialog.item_id.sku}</p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">
-                      {viewDialog.movement_type === "transfer_out" 
+                      {viewDialog.movement_type === "transfer_out"
                         ? "From Location"
                         : viewDialog.movement_type === "transfer_in"
-                        ? "To Location" 
-                        : "Location"
-                      }
+                        ? "To Location"
+                        : "Location"}
                     </Label>
                     <p className="mt-1">
-                      {viewDialog.movement_type === "transfer_out" 
+                      {viewDialog.movement_type === "transfer_out"
                         ? viewDialog.from_location_id?.name || "N/A"
                         : viewDialog.movement_type === "transfer_in"
                         ? viewDialog.to_location_id?.name || "N/A"
-                        : viewDialog.location_id?.name || viewDialog.to_location_id?.name || viewDialog.from_location_id?.name || "N/A"
-                      }
+                        : viewDialog.location_id?.name ||
+                          viewDialog.to_location_id?.name ||
+                          viewDialog.from_location_id?.name ||
+                          "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">New Balance</Label>
-                    <p className="text-lg font-medium mt-1">
-                      {new Intl.NumberFormat("en-US").format(
-                        viewDialog.quantity_after || 0
+                    <Label className="text-muted-foreground">
+                      Quantity After
+                    </Label>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <p className="text-lg font-medium">
+                        {new Intl.NumberFormat("en-US").format(
+                          viewDialog.quantity_after || 0
+                        )}
+                      </p>
+                      {viewDialog.item_id?.unit && (
+                        <span className="text-sm text-muted-foreground">
+                          {viewDialog.item_id.unit}
+                        </span>
                       )}
-                    </p>
+                    </div>
                   </div>
                 </div>
+
+                {(viewDialog.movement_type === "transfer_in" ||
+                  viewDialog.movement_type === "transfer_out") &&
+                  viewDialog.to_location_id &&
+                  viewDialog.from_location_id && (
+                    <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                      <div>
+                        <Label className="text-muted-foreground">
+                          From Location
+                        </Label>
+                        <p className="mt-1 font-medium">
+                          {viewDialog.from_location_id.name}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">
+                          To Location
+                        </Label>
+                        <p className="mt-1 font-medium">
+                          {viewDialog.to_location_id.name}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                 {(viewDialog.reference_number || viewDialog.reference) && (
                   <div>
                     <Label className="text-muted-foreground">
                       Reference
-                      {viewDialog.reference_type === "transfer" && " (Transfer)"}
+                      {viewDialog.reference_type === "transfer" &&
+                        " (Transfer)"}
                     </Label>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="font-mono">{viewDialog.reference_number || viewDialog.reference}</p>
-                      {viewDialog.reference_type === "transfer" && viewDialog.reference_id && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            // Navigate to stock transfers page with this transfer
-                            window.location.href = `/stock-transfers?highlight=${viewDialog.reference_id}`;
-                          }}
-                        >
-                          View Transfer
-                        </Button>
-                      )}
+                      <p className="font-mono">
+                        {viewDialog.reference_number || viewDialog.reference}
+                      </p>
+                      {viewDialog.reference_type === "transfer" &&
+                        viewDialog.reference_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Navigate to stock transfers page with this transfer
+                              window.location.href = `/stock-transfers?highlight=${viewDialog.reference_id}`;
+                            }}
+                          >
+                            View Transfer
+                          </Button>
+                        )}
                     </div>
                   </div>
                 )}
