@@ -50,6 +50,7 @@ import {
 import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Loader } from "@/components/ui/loader";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -232,9 +233,7 @@ export default function PurchaseOrdersPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <Loader className="h-full" />;
   }
 
   return (

@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Calendar, Plus, Edit, Trash } from "lucide-react";
-import { format } from "date-fns";
+import { Loader } from "@/components/ui/loader";
 import { itemsApi } from "@/lib/api";
 
 const statusColors = {
@@ -163,9 +163,7 @@ export default function ReservationsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <Loader className="h-full" />;
   }
 
   return (

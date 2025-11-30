@@ -48,6 +48,7 @@ import { Wrench, Calendar, Plus, Edit, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { itemsApi } from "@/lib/api";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Loader } from "@/components/ui/loader";
 
 const statusColors = {
   scheduled: "bg-blue-100 text-blue-800",
@@ -186,9 +187,7 @@ export default function MaintenancePage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <Loader className="h-full" />;
   }
 
   return (

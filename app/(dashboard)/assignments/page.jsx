@@ -16,8 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
-import Link from "next/link";
+import { Loader } from "@/components/ui/loader";
 
 export default function AssignmentsPage() {
   const { token } = useAuth();
@@ -69,9 +68,7 @@ export default function AssignmentsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <Loader className="h-full" />;
   }
 
   return (

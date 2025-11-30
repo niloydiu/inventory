@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { ArrowLeft, Edit, Trash } from "lucide-react"
-import Link from "next/link"
+import { Loader } from "@/components/ui/loader";
 
 export default function ItemDetailsPage() {
   const router = useRouter()
@@ -50,7 +50,7 @@ export default function ItemDetailsPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>
+    return <Loader className="h-full" />;
   }
 
   if (!item) {

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { PageLoader } from "@/components/ui/loader";
 import { useAuth } from "@/lib/auth-context";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
@@ -18,22 +19,7 @@ export default function DashboardLayout({ children }) {
 
   // Show loading state while checking authentication
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="relative inline-flex">
-            <div className="h-16 w-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-12 w-12 rounded-full bg-primary/10"></div>
-            </div>
-          </div>
-          <p className="mt-6 text-base font-medium text-foreground">
-            Loading...
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">Please wait</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   // Don't render anything if not authenticated (will redirect)

@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Plus, Edit, Trash, Building2, Star, Eye } from "lucide-react";
-import apiClient from "@/lib/api-client";
+import { Loader } from "@/components/ui/loader";
 
 const statusColors = {
   active: "bg-green-100 text-green-800",
@@ -138,9 +138,7 @@ export default function SuppliersPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <Loader className="h-full" />;
   }
 
   return (

@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { DetailViewDialog } from "@/components/ui/detail-view-dialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { TableLoader } from "@/components/ui/loader";
 import api from "@/lib/api-client";
 import { toast } from "sonner";
 
@@ -644,11 +645,7 @@ export default function ProductAssignmentsPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
-                    Loading...
-                  </TableCell>
-                </TableRow>
+                <TableLoader colSpan={8} />
               ) : currentAssignments.length === 0 ? (
                 <TableRow>
                   <TableCell

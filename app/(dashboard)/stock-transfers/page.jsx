@@ -51,6 +51,7 @@ import {
 import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Loader } from "@/components/ui/loader";
 
 const statusColors = {
   draft: "bg-gray-100 text-gray-800",
@@ -263,9 +264,7 @@ export default function StockTransfersPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <Loader className="h-full" />;
   }
 
   return (

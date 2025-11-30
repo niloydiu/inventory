@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { PageLoader } from "@/components/ui/loader";
 
 export default function HomePage() {
   const router = useRouter();
@@ -18,9 +19,5 @@ export default function HomePage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p>Loading...</p>
-    </div>
-  );
+  return <PageLoader />;
 }

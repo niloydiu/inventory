@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { Loader } from "@/components/ui/loader";
 
 export default function EditLivestockPage() {
   const router = useRouter()
@@ -70,7 +70,7 @@ export default function EditLivestockPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>
+    return <Loader className="h-full" />;
   }
 
   return (

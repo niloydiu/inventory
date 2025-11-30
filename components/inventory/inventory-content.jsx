@@ -8,6 +8,7 @@ import { ItemTable } from "@/components/inventory/item-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Loader } from "@/components/ui/loader";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
@@ -72,14 +73,7 @@ export function InventoryContent() {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading inventory...</p>
-        </div>
-      </div>
-    );
+    return <Loader className="h-full" text="Loading inventory..." />;
   }
 
   return (
