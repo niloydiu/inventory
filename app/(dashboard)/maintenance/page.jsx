@@ -47,6 +47,7 @@ import { toast } from "sonner";
 import { Wrench, Calendar, Plus, Edit, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { itemsApi } from "@/lib/api";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const statusColors = {
   scheduled: "bg-blue-100 text-blue-800",
@@ -70,6 +71,8 @@ export default function MaintenancePage() {
   const [loading, setLoading] = useState(true);
   const [formDialog, setFormDialog] = useState(null);
   const [formData, setFormData] = useState({});
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [maintenanceToDelete, setMaintenanceToDelete] = useState(null);
 
   useEffect(() => {
     fetchMaintenance();
@@ -146,11 +149,15 @@ export default function MaintenancePage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this maintenance record?"))
-      return;
+    setMaintenanceToDelete(id);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!maintenanceToDelete) return;
 
     try {
-      const result = await deleteMaintenance(id, token);
+      const result = await deleteMaintenance(maintenanceToDelete, token);
       if (result.success) {
         toast.success("Maintenance record deleted successfully");
         fetchMaintenance();
@@ -491,6 +498,16 @@ export default function MaintenancePage() {
             </Button>
           </DialogContent>
         </Dialog>
+
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Delete Maintenance Record"
+          description="Are you sure you want to delete this maintenance record? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={confirmDelete}
+          variant="destructive"
+        />
       </div>
     </div>
   );

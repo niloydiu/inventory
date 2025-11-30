@@ -7,6 +7,7 @@ import { ITEMS_ENDPOINTS } from "@/lib/config/api-endpoints";
 import { ItemTable } from "@/components/inventory/item-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
@@ -16,6 +17,8 @@ export function InventoryContent() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   const canEdit = user?.role === "admin" || user?.role === "manager";
 
@@ -46,10 +49,15 @@ export function InventoryContent() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this item?")) return;
+    setItemToDelete(id);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!itemToDelete) return;
 
     try {
-      await apiClient.delete(ITEMS_ENDPOINTS.BY_ID(id), token);
+      await apiClient.delete(ITEMS_ENDPOINTS.BY_ID(itemToDelete), token);
       toast.success("Item deleted successfully");
       fetchItems();
     } catch (error) {
@@ -104,6 +112,16 @@ export function InventoryContent() {
         items={filteredItems}
         onDelete={handleDelete}
         canEdit={canEdit}
+      />
+
+      <ConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Item"
+        description="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        variant="destructive"
       />
     </div>
   );

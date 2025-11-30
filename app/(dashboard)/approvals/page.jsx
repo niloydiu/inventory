@@ -47,6 +47,8 @@ import {
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Clock, Plus, Trash } from "lucide-react";
 import { format } from "date-fns";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { InputDialog } from "@/components/ui/input-dialog";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -67,6 +69,10 @@ export default function ApprovalsPage() {
   const [loading, setLoading] = useState(true);
   const [formDialog, setFormDialog] = useState(null);
   const [formData, setFormData] = useState({});
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [approvalToAction, setApprovalToAction] = useState(null);
 
   const canApprove = user?.role === "admin" || user?.role === "manager";
 
@@ -102,10 +108,15 @@ export default function ApprovalsPage() {
   }
 
   async function handleApprove(id) {
-    const notes = prompt("Add approval notes (optional):");
+    setApprovalToAction(id);
+    setShowApproveDialog(true);
+  }
+
+  async function confirmApprove(notes) {
+    if (!approvalToAction) return;
 
     try {
-      const result = await approveRequest(id, notes, token);
+      const result = await approveRequest(approvalToAction, notes, token);
       if (result.success) {
         toast.success("Request approved successfully");
         fetchApprovals();
@@ -118,11 +129,15 @@ export default function ApprovalsPage() {
   }
 
   async function handleReject(id) {
-    const notes = prompt("Add rejection reason:");
-    if (!notes) return;
+    setApprovalToAction(id);
+    setShowRejectDialog(true);
+  }
+
+  async function confirmReject(notes) {
+    if (!approvalToAction || !notes) return;
 
     try {
-      const result = await rejectRequest(id, notes, token);
+      const result = await rejectRequest(approvalToAction, notes, token);
       if (result.success) {
         toast.success("Request rejected");
         fetchApprovals();
@@ -173,11 +188,15 @@ export default function ApprovalsPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this approval request?"))
-      return;
+    setApprovalToAction(id);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!approvalToAction) return;
 
     try {
-      const result = await deleteApproval(id, token);
+      const result = await deleteApproval(approvalToAction, token);
       if (result.success) {
         toast.success("Approval request deleted successfully");
         fetchApprovals();
@@ -465,6 +484,41 @@ export default function ApprovalsPage() {
             </Button>
           </DialogContent>
         </Dialog>
+
+        <InputDialog
+          open={showApproveDialog}
+          onOpenChange={setShowApproveDialog}
+          title="Approve Request"
+          description="Add approval notes (optional)"
+          label="Approval Notes"
+          placeholder="Enter any additional notes..."
+          required={false}
+          onConfirm={confirmApprove}
+          confirmText="Approve"
+        />
+
+        <InputDialog
+          open={showRejectDialog}
+          onOpenChange={setShowRejectDialog}
+          title="Reject Request"
+          description="Please provide a reason for rejection"
+          label="Rejection Reason"
+          placeholder="Enter the reason for rejection..."
+          required={true}
+          onConfirm={confirmReject}
+          confirmText="Reject"
+          variant="destructive"
+        />
+
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Delete Approval Request"
+          description="Are you sure you want to delete this approval request? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={confirmDelete}
+          variant="destructive"
+        />
       </div>
     </div>
   );

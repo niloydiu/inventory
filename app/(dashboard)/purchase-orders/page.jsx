@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -68,6 +69,8 @@ export default function PurchaseOrdersPage() {
   const [viewDialog, setViewDialog] = useState(null);
   const [formData, setFormData] = useState({});
   const [poItems, setPoItems] = useState([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [poToDelete, setPoToDelete] = useState(null);
 
   useEffect(() => {
     fetchPurchaseOrders();
@@ -147,10 +150,15 @@ export default function PurchaseOrdersPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this purchase order?"))
-      return;
+    setPoToDelete(id);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!poToDelete) return;
+
     try {
-      await apiClient.delete(`/purchase-orders/${id}`, token);
+      await apiClient.delete(`/purchase-orders/${poToDelete}`, token);
       toast.success("Purchase order deleted successfully");
       fetchPurchaseOrders();
     } catch (error) {
@@ -690,6 +698,16 @@ export default function PurchaseOrdersPage() {
             </Button>
           </DialogContent>
         </Dialog>
+
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Delete Purchase Order"
+          description="Are you sure you want to delete this purchase order? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={confirmDelete}
+          variant="destructive"
+        />
       </div>
     </div>
   );

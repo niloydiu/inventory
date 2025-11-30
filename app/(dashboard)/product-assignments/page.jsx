@@ -45,6 +45,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { DetailViewDialog } from "@/components/ui/detail-view-dialog";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import api from "@/lib/api-client";
 import { toast } from "sonner";
 
@@ -60,6 +61,8 @@ export default function ProductAssignmentsPage() {
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [viewAssignment, setViewAssignment] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [assignmentToDelete, setAssignmentToDelete] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -264,10 +267,15 @@ export default function ProductAssignmentsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this assignment?")) return;
+    setAssignmentToDelete(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!assignmentToDelete) return;
 
     try {
-      const response = await api.delete(`/product-assignments/${id}`);
+      const response = await api.delete(`/product-assignments/${assignmentToDelete}`);
       if (response && response.success) {
         toast.success("Assignment deleted successfully");
         fetchAssignments();
@@ -897,6 +905,17 @@ export default function ProductAssignmentsPage() {
           }}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Assignment"
+        description="Are you sure you want to delete this assignment? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 }
