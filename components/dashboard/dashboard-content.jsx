@@ -55,11 +55,17 @@ export function DashboardContent() {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Auth: {authLoading ? "Loading" : "Done"}, Data:{" "}
-            {loading ? "Loading" : "Done"}
+          <div className="relative inline-flex">
+            <div className="h-16 w-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-12 w-12 rounded-full bg-primary/10"></div>
+            </div>
+          </div>
+          <p className="mt-6 text-base font-medium text-foreground">
+            Loading dashboard...
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Please wait while we fetch your data
           </p>
         </div>
       </div>
@@ -69,9 +75,27 @@ export function DashboardContent() {
   if (!token) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px]">
-        <div className="text-center">
+        <div className="text-center max-w-md">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
+            <svg
+              className="h-10 w-10 text-destructive"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-foreground mb-2">
+            Authentication Required
+          </h3>
           <p className="text-muted-foreground">
-            Please log in to view the dashboard.
+            Please log in to view the dashboard and access your inventory data.
           </p>
         </div>
       </div>
@@ -81,14 +105,29 @@ export function DashboardContent() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px]">
-        <div className="text-center">
-          <p className="text-destructive font-medium">
-            Error loading dashboard
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">{error}</p>
+        <div className="text-center max-w-md">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
+            <svg
+              className="h-10 w-10 text-destructive"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-destructive mb-2">
+            Error Loading Dashboard
+          </h3>
+          <p className="text-sm text-muted-foreground mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-semibold shadow-sm hover:shadow-md transition-all active:scale-95"
           >
             Retry
           </button>
@@ -100,11 +139,31 @@ export function DashboardContent() {
   if (!stats) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px]">
-        <div className="text-center">
-          <p className="text-muted-foreground">No dashboard data available</p>
+        <div className="text-center max-w-md">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <svg
+              className="h-10 w-10 text-muted-foreground"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-foreground mb-2">
+            No Data Available
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Dashboard data is not available at the moment.
+          </p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-semibold shadow-sm hover:shadow-md transition-all active:scale-95"
           >
             Reload
           </button>
@@ -114,19 +173,26 @@ export function DashboardContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div>
+          <h2 className="text-4xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/60 bg-clip-text">
+            Dashboard
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            Overview of your inventory management system
+          </p>
+        </div>
       </div>
 
       <StatsCards stats={stats} />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <CategoryChart data={stats?.category_stats} />
         <RecentItems items={stats?.recent_items || []} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <LowStockAlert items={stats?.low_stock_items || []} />
       </div>
     </div>

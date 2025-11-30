@@ -84,11 +84,20 @@ export default function ProductAssignmentsPage() {
   });
 
   useEffect(() => {
-    fetchAssignments();
+    const timer = setTimeout(() => {
+      fetchAssignments();
+    }, 300); // Debounce API calls
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, searchTerm, pagination.page, pagination.limit]);
+
+  useEffect(() => {
+    // Fetch initial data only once
     fetchStats();
     fetchItems();
     fetchEmployees();
-  }, [pagination.page, pagination.limit, statusFilter, searchTerm]);
+  }, []);
 
   const fetchAssignments = async () => {
     try {

@@ -120,12 +120,13 @@ const sidebarItems = [
     icon: CheckCircle,
     roles: ["admin", "manager", "employee"],
   },
-  {
-    name: "Notifications",
-    href: "/notifications",
-    icon: Bell,
-    roles: ["admin", "manager", "employee"],
-  },
+  // Temporarily hidden - notifications feature needs fixes
+  // {
+  //   name: "Notifications",
+  //   href: "/notifications",
+  //   icon: Bell,
+  //   roles: ["admin", "manager", "employee"],
+  // },
   {
     name: "Reports",
     href: "/reports",
@@ -154,43 +155,75 @@ export function Sidebar({ className }) {
 
   return (
     <div
-      className={cn("flex flex-col h-full border-r bg-background", className)}
+      className={cn(
+        "flex flex-col h-full border-r bg-sidebar/50 backdrop-blur-xl",
+        className
+      )}
     >
       {/* Header */}
-      <div className="px-6 py-6 border-b">
-        <h2 className="text-lg font-semibold tracking-tight">
-          Inventory System
-        </h2>
+      <div className="px-6 py-6 border-b border-sidebar-border/50">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-purple-600 shadow-lg">
+            <Package className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">Inventory</h2>
+            <p className="text-xs text-muted-foreground">Management System</p>
+          </div>
+        </div>
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-4">
-        <div className="px-3 space-y-1">
+      <div className="flex-1 overflow-y-auto py-6">
+        <div className="px-3 space-y-1.5">
           {filteredItems.map((item) => (
             <Button
               key={item.href}
               variant={pathname.startsWith(item.href) ? "secondary" : "ghost"}
-              className="w-full justify-start"
+              className={cn(
+                "w-full justify-start gap-3 h-11 px-4 transition-all duration-200",
+                pathname.startsWith(item.href)
+                  ? "bg-primary/10 text-primary shadow-sm font-semibold border border-primary/20"
+                  : "hover:bg-sidebar-accent/50 hover:translate-x-1"
+              )}
               asChild
             >
               <Link href={item.href}>
-                <item.icon className="mr-2 h-4 w-4" />
-                {item.name}
+                <item.icon
+                  className={cn(
+                    "h-5 w-5 transition-transform",
+                    pathname.startsWith(item.href) && "scale-110"
+                  )}
+                />
+                <span className="text-sm">{item.name}</span>
               </Link>
             </Button>
           ))}
         </div>
       </div>
 
-      {/* Logout button at bottom */}
-      <div className="px-3 py-4 border-t">
+      {/* User info and logout */}
+      <div className="px-3 py-4 border-t border-sidebar-border/50 space-y-3">
+        <div className="px-4 py-3 rounded-lg bg-sidebar-accent/50">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
+              {user?.username?.substring(0, 2).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{user?.username}</p>
+              <p className="text-xs text-muted-foreground capitalize">
+                {user?.role}
+              </p>
+            </div>
+          </div>
+        </div>
         <Button
           variant="ghost"
-          className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+          className="w-full justify-start gap-3 h-11 px-4 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
           onClick={logout}
         >
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
+          <LogOut className="h-5 w-5" />
+          <span className="text-sm font-medium">Logout</span>
         </Button>
       </div>
     </div>

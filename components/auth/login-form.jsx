@@ -50,15 +50,19 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel className="text-sm font-semibold">Username</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your username" {...field} />
+                <Input
+                  placeholder="Enter your username"
+                  className="h-11 border-2 focus:border-primary transition-colors"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -69,11 +73,12 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-sm font-semibold">Password</FormLabel>
               <FormControl>
                 <Input
                   type="password"
                   placeholder="Enter your password"
+                  className="h-11 border-2 focus:border-primary transition-colors"
                   {...field}
                 />
               </FormControl>
@@ -81,9 +86,13 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Sign In
+        <Button
+          type="submit"
+          className="w-full h-11 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+          disabled={isLoading}
+        >
+          {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+          {isLoading ? "Signing in..." : "Sign In"}
         </Button>
       </form>
     </Form>

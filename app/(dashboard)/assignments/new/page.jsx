@@ -30,7 +30,7 @@ export default function NewAssignmentPage() {
 
       try {
         console.log("Fetching items and users...");
-        
+
         const [itemsData, usersData] = await Promise.all([
           itemsApi.getAll(token),
           usersApi.getAll(token),
@@ -73,11 +73,16 @@ export default function NewAssignmentPage() {
   async function onSubmit(data) {
     setIsLoading(true);
     try {
-      await assignmentsApi.create(data, token);
+      console.log("Submitting assignment data:", data);
+      const result = await assignmentsApi.create(data, token);
+      console.log("Assignment created:", result);
       toast.success("Assignment created successfully");
       router.push("/assignments");
     } catch (error) {
-      toast.error(error.message || "Failed to create assignment");
+      console.error("Assignment creation error:", error);
+      // Show the detailed error message
+      const errorMessage = error.message || "Failed to create assignment";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
