@@ -9,7 +9,7 @@ exports.getAllAssignments = async (req, res) => {
     const cleanQuery = { ...req.query };
     delete cleanQuery._t;
     delete cleanQuery._;
-    
+
     const result = await paginatedQuery(
       ProductAssignment,
       cleanQuery,
