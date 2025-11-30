@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import apiClient from "@/lib/api-client";
 import {
   Card,
   CardContent,

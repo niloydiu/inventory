@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { livestockApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 import { PageLoader } from "@/components/ui/loader";
 import apiClient from "@/lib/api-client";
 import { DASHBOARD_ENDPOINTS } from "@/lib/config/api-endpoints";
