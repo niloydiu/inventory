@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { PageLoader } from "@/components/ui/loader"
 import Link from "next/link"
 
 export default function EditFeedPage() {
@@ -71,7 +72,7 @@ export default function EditFeedPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>
+    return <PageLoader />;
   }
 
   return (

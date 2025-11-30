@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { PageLoader } from "@/components/ui/loader";
 import apiClient from "@/lib/api-client";
 import { DASHBOARD_ENDPOINTS } from "@/lib/config/api-endpoints";
 import { StatsCards } from "@/components/dashboard/stats-cards";
@@ -52,24 +53,7 @@ export function DashboardContent() {
   }, [token, authLoading]);
 
   if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[400px]">
-        <div className="text-center">
-          <div className="relative inline-flex">
-            <div className="h-16 w-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-12 w-12 rounded-full bg-primary/10"></div>
-            </div>
-          </div>
-          <p className="mt-6 text-base font-medium text-foreground">
-            Loading dashboard...
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Please wait while we fetch your data
-          </p>
-        </div>
-      </div>
-    );
+    return <PageLoader text="Loading dashboard..." />;
   }
 
   if (!token) {

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { PageLoader } from "@/components/ui/loader";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { RegisterForm } from "@/components/auth/register-form";
@@ -25,11 +26,7 @@ export default function RegisterPage() {
   }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (isAuthenticated) {

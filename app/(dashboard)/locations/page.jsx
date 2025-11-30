@@ -29,8 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { Plus, Edit, Trash, MapPin } from "lucide-react";
+import { PageLoader } from "@/components/ui/loader";
 
 const statusColors = {
   active: "bg-green-100 text-green-800",
@@ -44,6 +46,8 @@ export default function LocationsPage() {
   const [loading, setLoading] = useState(true);
   const [formDialog, setFormDialog] = useState(null);
   const [formData, setFormData] = useState({});
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [locationToDelete, setLocationToDelete] = useState(null);
 
   const canEdit = user?.role === "admin" || user?.role === "manager";
 
@@ -84,10 +88,15 @@ export default function LocationsPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this location?")) return;
+    setLocationToDelete(id);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!locationToDelete) return;
 
     try {
-      await locationsApi.delete(id, token);
+      await locationsApi.delete(locationToDelete, token);
       toast.success("Location deleted successfully");
       fetchLocations();
     } catch (error) {
@@ -96,9 +105,7 @@ export default function LocationsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (
@@ -272,6 +279,16 @@ export default function LocationsPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Delete Location"
+          description="Are you sure you want to delete this location? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={confirmDelete}
+          variant="destructive"
+        />
       </div>
     </div>
   );

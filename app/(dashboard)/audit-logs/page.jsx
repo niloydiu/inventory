@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Activity, Users, FileText } from "lucide-react";
+import { PageLoader } from "@/components/ui/loader";
 
 export default function AuditLogsPage() {
   const { token } = useAuth();
@@ -70,9 +71,7 @@ export default function AuditLogsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (

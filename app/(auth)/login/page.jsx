@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PageLoader } from "@/components/ui/loader";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -53,11 +54,7 @@ export default function LoginPage() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   // Don't render if authenticated - prevents flash of login form

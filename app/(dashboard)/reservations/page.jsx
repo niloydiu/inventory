@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
 import {
   getAllReservations,
@@ -37,7 +38,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Calendar, Plus, Edit, Trash } from "lucide-react";
-import { format } from "date-fns";
+import { PageLoader } from "@/components/ui/loader";
 import { itemsApi } from "@/lib/api";
 
 const statusColors = {
@@ -163,9 +164,7 @@ export default function ReservationsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (

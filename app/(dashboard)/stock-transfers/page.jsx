@@ -50,6 +50,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { PageLoader } from "@/components/ui/loader";
 
 const statusColors = {
   draft: "bg-gray-100 text-gray-800",
@@ -70,6 +72,10 @@ export default function StockTransfersPage() {
   const [viewDialog, setViewDialog] = useState(null);
   const [formData, setFormData] = useState({});
   const [transferItems, setTransferItems] = useState([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [transferToDelete, setTransferToDelete] = useState(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [transferToCancel, setTransferToCancel] = useState(null);
 
   useEffect(() => {
     fetchTransfers();
@@ -151,9 +157,15 @@ export default function StockTransfersPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this transfer?")) return;
+    setTransferToDelete(id);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!transferToDelete) return;
+
     try {
-      await apiClient.delete(`/stock-transfers/${id}`, token);
+      await apiClient.delete(`/stock-transfers/${transferToDelete}`, token);
       toast.success("Transfer deleted successfully");
       fetchTransfers();
     } catch (error) {
@@ -202,9 +214,15 @@ export default function StockTransfersPage() {
   }
 
   async function handleCancel(id) {
-    if (!confirm("Are you sure you want to cancel this transfer?")) return;
+    setTransferToCancel(id);
+    setShowCancelDialog(true);
+  }
+
+  async function confirmCancel() {
+    if (!transferToCancel) return;
+
     try {
-      await apiClient.post(`/stock-transfers/${id}/cancel`, {}, token);
+      await apiClient.post(`/stock-transfers/${transferToCancel}/cancel`, {}, token);
       toast.success("Transfer cancelled");
       fetchTransfers();
     } catch (error) {
@@ -246,9 +264,7 @@ export default function StockTransfersPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (
@@ -690,6 +706,26 @@ export default function StockTransfersPage() {
             </Button>
           </DialogContent>
         </Dialog>
+
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Delete Transfer"
+          description="Are you sure you want to delete this transfer? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={confirmDelete}
+          variant="destructive"
+        />
+
+        <ConfirmationDialog
+          open={showCancelDialog}
+          onOpenChange={setShowCancelDialog}
+          title="Cancel Transfer"
+          description="Are you sure you want to cancel this transfer? This action cannot be undone."
+          confirmText="Cancel"
+          onConfirm={confirmCancel}
+          variant="destructive"
+        />
       </div>
     </div>
   );

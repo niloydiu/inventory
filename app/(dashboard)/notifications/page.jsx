@@ -40,6 +40,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { PageLoader } from "@/components/ui/loader";
 
 const priorityColors = {
   low: "bg-blue-100 text-blue-800",
@@ -60,6 +62,8 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewDialog, setViewDialog] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [notificationToDelete, setNotificationToDelete] = useState(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -110,9 +114,15 @@ export default function NotificationsPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this notification?")) return;
+    setNotificationToDelete(id);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!notificationToDelete) return;
+
     try {
-      await apiClient.delete(`/notifications/${id}`, token);
+      await apiClient.delete(`/notifications/${notificationToDelete}`, token);
       toast.success("Notification deleted");
       fetchNotifications();
     } catch (error) {
@@ -131,9 +141,7 @@ export default function NotificationsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (
@@ -537,6 +545,16 @@ export default function NotificationsPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Delete Notification"
+          description="Are you sure you want to delete this notification? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={confirmDelete}
+          variant="destructive"
+        />
       </div>
     </div>
   );

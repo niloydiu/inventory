@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { livestockApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Edit, Trash } from "lucide-react"
-import Link from "next/link"
+import { PageLoader } from "@/components/ui/loader";
 import { useRouter } from "next/navigation"
 
 const healthColors = {
@@ -60,7 +61,7 @@ export default function LivestockPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>
+    return <PageLoader />;
   }
 
   return (

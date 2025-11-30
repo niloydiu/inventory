@@ -45,6 +45,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { DetailViewDialog } from "@/components/ui/detail-view-dialog";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { TableLoader } from "@/components/ui/loader";
 import api from "@/lib/api-client";
 import { toast } from "sonner";
 
@@ -60,6 +62,8 @@ export default function ProductAssignmentsPage() {
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [viewAssignment, setViewAssignment] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [assignmentToDelete, setAssignmentToDelete] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -83,21 +87,68 @@ export default function ProductAssignmentsPage() {
     current_value: "",
   });
 
+  const [allAssignments, setAllAssignments] = useState([]);
+  const [filteredAssignments, setFilteredAssignments] = useState([]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchAssignments();
-    }, 300); // Debounce API calls
+      if (searchTerm.trim()) {
+        // Client-side search
+        const filtered = allAssignments.filter((assignment) => {
+          const searchLower = searchTerm.toLowerCase();
+          return (
+            assignment.item_id?.name?.toLowerCase().includes(searchLower) ||
+            assignment.item_id?.sku?.toLowerCase().includes(searchLower) ||
+            assignment.employee_id?.username?.toLowerCase().includes(searchLower) ||
+            assignment.employee_id?.email?.toLowerCase().includes(searchLower) ||
+            assignment.issued_by?.username?.toLowerCase().includes(searchLower) ||
+            assignment.purpose?.toLowerCase().includes(searchLower) ||
+            assignment.issue_remarks?.toLowerCase().includes(searchLower) ||
+            assignment.return_remarks?.toLowerCase().includes(searchLower) ||
+            assignment.serial_number?.toLowerCase().includes(searchLower) ||
+            assignment.asset_tag?.toLowerCase().includes(searchLower)
+          );
+        });
+
+        // Apply status filter
+        const statusFiltered = statusFilter === "all" 
+          ? filtered 
+          : filtered.filter(assignment => assignment.status === statusFilter);
+
+        setFilteredAssignments(statusFiltered);
+        setPagination(prev => ({
+          ...prev,
+          page: 1,
+          total: statusFiltered.length,
+          totalPages: Math.ceil(statusFiltered.length / prev.limit)
+        }));
+      } else {
+        // Server-side pagination when no search
+        fetchAssignments();
+      }
+    }, 300);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, searchTerm, pagination.page, pagination.limit]);
+  }, [searchTerm, statusFilter, pagination.limit]);
 
   useEffect(() => {
     // Fetch initial data only once
     fetchStats();
     fetchItems();
     fetchEmployees();
+    fetchAllAssignments();
   }, []);
+
+  const fetchAllAssignments = async () => {
+    try {
+      const response = await api.get("/product-assignments?limit=10000"); // Fetch all for client-side search
+      if (response && response.success) {
+        setAllAssignments(response.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch all assignments:", error);
+    }
+  };
 
   const fetchAssignments = async () => {
     try {
@@ -106,12 +157,11 @@ export default function ProductAssignmentsPage() {
         page: pagination.page,
         limit: pagination.limit,
         ...(statusFilter !== "all" && { status: statusFilter }),
-        ...(searchTerm && { search: searchTerm }),
       });
 
       const response = await api.get(`/product-assignments?${params}`);
       if (response && response.success) {
-        setAssignments(response.data || []);
+        setFilteredAssignments(response.data || []);
         if (response.pagination) {
           setPagination((prev) => ({
             ...prev,
@@ -141,9 +191,11 @@ export default function ProductAssignmentsPage() {
 
   const fetchItems = async () => {
     try {
-      const response = await api.get("/items?limit=1000&status=active");
+      const response = await api.get("/items?limit=1000&status=available");
       if (response && response.success) {
-        setItems(response.data || []);
+        // Filter items that have available quantity > 0
+        const availableItems = (response.data || []).filter(item => item.quantity > 0);
+        setItems(availableItems);
       }
     } catch (error) {
       console.error("Failed to fetch items:", error);
@@ -216,10 +268,15 @@ export default function ProductAssignmentsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this assignment?")) return;
+    setAssignmentToDelete(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!assignmentToDelete) return;
 
     try {
-      const response = await api.delete(`/product-assignments/${id}`);
+      const response = await api.delete(`/product-assignments/${assignmentToDelete}`);
       if (response && response.success) {
         toast.success("Assignment deleted successfully");
         fetchAssignments();
@@ -278,6 +335,21 @@ export default function ProductAssignmentsPage() {
   const formatDate = (date) => {
     return date ? format(new Date(date), "MMM dd, yyyy") : "N/A";
   };
+
+  // Get current page assignments
+  const getCurrentPageAssignments = () => {
+    if (searchTerm.trim()) {
+      // Client-side pagination for search results
+      const startIndex = (pagination.page - 1) * pagination.limit;
+      const endIndex = startIndex + pagination.limit;
+      return filteredAssignments.slice(startIndex, endIndex);
+    } else {
+      // Server-side pagination
+      return filteredAssignments;
+    }
+  };
+
+  const currentAssignments = getCurrentPageAssignments();
 
   const isOverdue = (assignment) => {
     if (!assignment.expected_return_date || assignment.status === "returned")
@@ -573,12 +645,8 @@ export default function ProductAssignmentsPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              ) : assignments.length === 0 ? (
+                <TableLoader colSpan={8} />
+              ) : currentAssignments.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={8}
@@ -588,7 +656,7 @@ export default function ProductAssignmentsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                assignments.map((assignment) => (
+                currentAssignments.map((assignment) => (
                   <TableRow key={assignment._id}>
                     <TableCell>
                       <div className="font-medium">
@@ -834,6 +902,17 @@ export default function ProductAssignmentsPage() {
           }}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Assignment"
+        description="Are you sure you want to delete this assignment? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 }

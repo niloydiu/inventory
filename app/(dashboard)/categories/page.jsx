@@ -37,6 +37,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import apiClient from "@/lib/api-client";
+import { PageLoader } from "@/components/ui/loader";
 
 export default function CategoriesPage() {
   const { token } = useAuth();
@@ -189,9 +190,7 @@ export default function CategoriesPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (

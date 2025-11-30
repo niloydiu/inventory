@@ -17,9 +17,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { PageLoader } from "@/components/ui/loader";
 
 export default function UsersPage() {
   const { token, user } = useAuth();
@@ -27,6 +29,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [editDialog, setEditDialog] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -72,10 +76,15 @@ export default function UsersPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+    setUserToDelete(id);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!userToDelete) return;
 
     try {
-      const result = await deleteUser(id, token);
+      const result = await deleteUser(userToDelete, token);
       if (result.success) {
         toast.success("User deleted successfully");
         fetchUsers();
@@ -88,9 +97,7 @@ export default function UsersPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (
@@ -129,6 +136,16 @@ export default function UsersPage() {
             />
           </DialogContent>
         </Dialog>
+
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Delete User"
+          description="Are you sure you want to delete this user? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={confirmDelete}
+          variant="destructive"
+        />
       </div>
     </div>
   );

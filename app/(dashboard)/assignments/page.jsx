@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { assignmentsApi } from "@/lib/api";
 import { AssignmentTable } from "@/components/assignments/assignment-table";
@@ -16,8 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { PageLoader } from "@/components/ui/loader";
 import { Plus } from "lucide-react";
-import Link from "next/link";
 
 export default function AssignmentsPage() {
   const { token } = useAuth();
@@ -69,9 +70,7 @@ export default function AssignmentsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (
