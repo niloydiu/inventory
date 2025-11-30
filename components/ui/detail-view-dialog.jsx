@@ -18,6 +18,7 @@ import { Edit } from "lucide-react";
  * @param {string} props.title - Dialog title
  * @param {string} props.description - Dialog description
  * @param {Array} props.fields - Array of field objects {label, value, span, type, className}
+ * @param {Object} props.data - Object with key-value pairs to display (alternative to fields)
  * @param {Function} props.onEdit - Optional edit handler
  * @param {React.ReactNode} props.children - Optional custom content
  */
@@ -27,10 +28,21 @@ export function DetailViewDialog({
   title,
   description,
   fields = [],
+  data,
   onEdit,
   children,
   maxWidth = "max-w-3xl",
 }) {
+  // Convert data object to fields array if data is provided
+  const actualFields = data
+    ? Object.entries(data).map(([key, value]) => ({
+        label: key,
+        value: typeof value === "object" && value !== null ? value.value : value,
+        type: typeof value === "object" && value !== null ? value.type : undefined,
+        span: typeof value === "object" && value !== null ? value.span : undefined,
+        className: typeof value === "object" && value !== null ? value.className : undefined,
+      }))
+    : fields;
   const formatValue = (field) => {
     if (
       field.value === null ||
@@ -133,7 +145,7 @@ export function DetailViewDialog({
         <div className="space-y-4">
           {children || (
             <div className="grid grid-cols-2 gap-4">
-              {fields.map((field, idx) => (
+              {actualFields.map((field, idx) => (
                 <div
                   key={idx}
                   className={`${field.span === 2 ? "col-span-2" : ""} ${

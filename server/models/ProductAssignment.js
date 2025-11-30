@@ -246,19 +246,19 @@ productAssignmentSchema.statics.getOverdueAssignments = function () {
   }).populate("item_id employee_id issued_by");
 };
 
-// Pre-save middleware to add history
-productAssignmentSchema.pre("save", function (next) {
-  if (this.isModified("status") && !this.isNew) {
-    const oldStatus = this._doc.status; // Get old value
-    this.addHistory(
-      "Status Changed",
-      this.issued_by,
-      `Status changed from ${oldStatus} to ${this.status}`,
-      oldStatus,
-      this.status
-    );
-  }
-  next();
-});
+// Pre-save middleware to add history - removed as history is added manually in controllers
+// productAssignmentSchema.pre("save", function (next) {
+//   if (this.isModified("status") && !this.isNew) {
+//     const oldStatus = this._doc.status; // Get old value
+//     this.addHistory(
+//       "Status Changed",
+//       this.issued_by,
+//       `Status changed from ${oldStatus} to ${this.status}`,
+//       oldStatus,
+//       this.status
+//     );
+//   }
+//   next();
+// });
 
 module.exports = mongoose.model("ProductAssignment", productAssignmentSchema);

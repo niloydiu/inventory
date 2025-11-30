@@ -132,9 +132,11 @@ export default function ProductAssignmentsPage() {
 
   const fetchItems = async () => {
     try {
-      const response = await api.get("/items?limit=1000&status=active");
+      const response = await api.get("/items?limit=1000&status=available");
       if (response && response.success) {
-        setItems(response.data || []);
+        // Filter items that have available quantity > 0
+        const availableItems = (response.data || []).filter(item => item.quantity > 0);
+        setItems(availableItems);
       }
     } catch (error) {
       console.error("Failed to fetch items:", error);
