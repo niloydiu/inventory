@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader } from "@/components/ui/loader";
+import { PageLoader } from "@/components/ui/loader";
 import { Plus } from "lucide-react";
 
 export default function AssignmentsPage() {
@@ -70,7 +70,7 @@ export default function AssignmentsPage() {
   }
 
   if (loading) {
-    return <Loader className="h-full" />;
+    return <PageLoader />;
   }
 
   return (

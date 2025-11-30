@@ -49,7 +49,7 @@ import { CheckCircle, XCircle, Clock, Plus, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { InputDialog } from "@/components/ui/input-dialog";
-import { Loader } from "@/components/ui/loader";
+import { PageLoader } from "@/components/ui/loader";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -210,7 +210,7 @@ export default function ApprovalsPage() {
   }
 
   if (loading) {
-    return <Loader className="h-full" />;
+    return <PageLoader />;
   }
 
   return (

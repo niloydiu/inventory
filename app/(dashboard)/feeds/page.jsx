@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Plus, Edit, Trash, AlertCircle } from "lucide-react";
+import { PageLoader } from "@/components/ui/loader";
 import Link from "next/link";
 import { format, isPast, parseISO } from "date-fns";
 
@@ -60,9 +61,7 @@ export default function FeedsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">Loading...</div>
-    );
+    return <PageLoader />;
   }
 
   return (

@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Calendar, Plus, Edit, Trash } from "lucide-react";
-import { Loader } from "@/components/ui/loader";
+import { PageLoader } from "@/components/ui/loader";
 import { itemsApi } from "@/lib/api";
 
 const statusColors = {
@@ -164,7 +164,7 @@ export default function ReservationsPage() {
   }
 
   if (loading) {
-    return <Loader className="h-full" />;
+    return <PageLoader />;
   }
 
   return (

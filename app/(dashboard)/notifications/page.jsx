@@ -41,7 +41,7 @@ import {
 import { format } from "date-fns";
 import apiClient from "@/lib/api-client";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { Loader } from "@/components/ui/loader";
+import { PageLoader } from "@/components/ui/loader";
 
 const priorityColors = {
   low: "bg-blue-100 text-blue-800",
@@ -141,7 +141,7 @@ export default function NotificationsPage() {
   };
 
   if (loading) {
-    return <Loader className="h-full" />;
+    return <PageLoader />;
   }
 
   return (

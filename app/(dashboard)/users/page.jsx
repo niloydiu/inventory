@@ -21,7 +21,7 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { Loader } from "@/components/ui/loader";
+import { PageLoader } from "@/components/ui/loader";
 
 export default function UsersPage() {
   const { token, user } = useAuth();
@@ -97,7 +97,7 @@ export default function UsersPage() {
   }
 
   if (loading) {
-    return <Loader className="h-full" />;
+    return <PageLoader />;
   }
 
   return (

@@ -37,7 +37,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import apiClient from "@/lib/api-client";
-import { Loader } from "@/components/ui/loader";
+import { PageLoader } from "@/components/ui/loader";
 
 export default function CategoriesPage() {
   const { token } = useAuth();
@@ -190,7 +190,7 @@ export default function CategoriesPage() {
   }
 
   if (loading) {
-    return <Loader className="h-full" />;
+    return <PageLoader />;
   }
 
   return (

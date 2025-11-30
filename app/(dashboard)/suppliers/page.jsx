@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Plus, Edit, Trash, Building2, Star, Eye } from "lucide-react";
-import { Loader } from "@/components/ui/loader";
+import { PageLoader } from "@/components/ui/loader";
 
 const statusColors = {
   active: "bg-green-100 text-green-800",
@@ -139,7 +139,7 @@ export default function SuppliersPage() {
   }
 
   if (loading) {
-    return <Loader className="h-full" />;
+    return <PageLoader />;
   }
 
   return (

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Edit, Trash } from "lucide-react"
-import { Loader } from "@/components/ui/loader";
+import { PageLoader } from "@/components/ui/loader";
 import { useRouter } from "next/navigation"
 
 const healthColors = {
@@ -61,7 +61,7 @@ export default function LivestockPage() {
   }
 
   if (loading) {
-    return <Loader className="h-full" />;
+    return <PageLoader />;
   }
 
   return (
