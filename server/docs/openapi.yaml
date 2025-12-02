@@ -1,15 +1,23 @@
 openapi: 3.0.1
 info:
-  title: Inventory API
+  title: Inventory Management System API
   version: 1.0.0
   description: |
-    OpenAPI documentation for the Inventory API.
-    This file includes a small subset of endpoints to get started.
+    Comprehensive API documentation for the Inventory Management System.
+    This API provides endpoints for managing items, stock, users, assignments, and more.
+    
+    ### Pagination and Filtering
+    Most list endpoints support standard pagination and filtering parameters:
+    - `page`: Page number (default: 1)
+    - `limit`: Items per page (default: 10, max: 100)
+    - `sort`: Sort field (prefix with - for descending, e.g., `-created_at`)
+    - `search`: General search term
+    - `startDate`, `endDate`: Date range filtering
 servers:
-  - url: http://localhost:3000
-    description: Local development server
-  - url: /
-    description: Relative server (uses current host)
+  - url: /api/v1
+    description: API Version 1
+  - url: http://localhost:5000/api/v1
+    description: Local Development Server
 
 components:
   securitySchemes:
@@ -17,22 +25,116 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    PageParam:
+      in: query
+      name: page
+      schema:
+        type: integer
+        default: 1
+      description: Page number
+    LimitParam:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        default: 10
+      description: Items per page
+    SortParam:
+      in: query
+      name: sort
+      schema:
+        type: string
+      description: Sort field (e.g. -createdAt)
+    SearchParam:
+      in: query
+      name: search
+      schema:
+        type: string
+      description: Search term
+
   schemas:
-    LoginRequest:
-      type: object
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-      required: [email, password]
-    LoginResponse:
+    # Common
+    Error:
       type: object
       properties:
         success:
           type: boolean
-        token:
+          example: false
+        message:
           type: string
+          example: "Error description"
+    
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation successful"
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPrevPage:
+          type: boolean
+
+    PaginatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items: {}
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Models
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, manager, employee, warehouse_staff, viewer]
+        full_name:
+          type: string
+        employee_id:
+          type: string
+        department:
+          type: string
+        position:
+          type: string
+        phone:
+          type: string
+        is_active:
+          type: boolean
+        avatar_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    
     Item:
       type: object
       properties:
@@ -42,61 +144,1125 @@ components:
           type: string
         sku:
           type: string
-        availableQuantity:
-          type: integer
+        description:
+          type: string
+        category_id:
+          type: string
+        category:
+          type: string
+        quantity:
+          type: number
+        available_quantity:
+          type: number
+        reserved_quantity:
+          type: number
+        unit:
+          type: string
+        location_id:
+          type: string
+        low_stock_threshold:
+          type: number
+        reorder_point:
+          type: number
+        purchase_price:
+          type: number
+        selling_price:
+          type: number
+        currency:
+          type: string
+        supplier_id:
+          type: string
+        status:
+          type: string
+          enum: [available, in_use, maintenance, retired, active, inactive, discontinued, out_of_stock]
+        image_url:
+          type: string
+        barcode:
+          type: string
+        stock_status:
+          type: string
+          enum: [out_of_stock, low_stock, overstock, in_stock]
+
+    Category:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        parent_id:
+          type: string
+        level:
+          type: number
+        path:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+
+    Location:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+        type:
+          type: string
+          enum: [warehouse, office, store, facility, zone, rack, shelf, bin, other]
+        parent_location_id:
+          type: string
+        capacity:
+          type: number
+        current_usage:
+          type: number
+        status:
+          type: string
+          enum: [active, inactive, maintenance, full]
+        utilization_percentage:
+          type: number
+
+    Supplier:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        contact_person:
+          type: object
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
+        status:
+          type: string
+          enum: [active, inactive, blocked]
+
+    PurchaseOrder:
+      type: object
+      properties:
+        _id:
+          type: string
+        po_number:
+          type: string
+        supplier_id:
+          type: string
+        order_date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [draft, pending, approved, ordered, partially_received, received, cancelled]
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              item_id:
+                type: string
+              quantity_ordered:
+                type: number
+              unit_price:
+                type: number
+              total:
+                type: number
+        total_amount:
+          type: number
+        currency:
+          type: string
+
+    StockMovement:
+      type: object
+      properties:
+        _id:
+          type: string
+        item_id:
+          type: string
+        movement_type:
+          type: string
+          enum: [purchase, sale, transfer_in, transfer_out, adjustment_increase, adjustment_decrease, return, damage, expired, assignment, return_assignment]
+        quantity:
+          type: number
+        from_location_id:
+          type: string
+        to_location_id:
+          type: string
+        reference_type:
+          type: string
+        reference_number:
+          type: string
+        performed_by:
+          type: string
+
+    StockTransfer:
+      type: object
+      properties:
+        _id:
+          type: string
+        transfer_number:
+          type: string
+        from_location_id:
+          type: string
+        to_location_id:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              item_id:
+                type: string
+              quantity_requested:
+                type: number
+              quantity_sent:
+                type: number
+              quantity_received:
+                type: number
+        status:
+          type: string
+          enum: [draft, pending, in_transit, partially_received, received, cancelled]
+
+    Assignment:
+      type: object
+      properties:
+        _id:
+          type: string
+        item_id:
+          type: string
+        assigned_to_user_id:
+          type: string
+        assigned_by_user_id:
+          type: string
+        quantity:
+          type: number
+        assignment_date:
+          type: string
+          format: date-time
+        expected_return_date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [assigned, returned, overdue]
+
+    ProductAssignment:
+      type: object
+      properties:
+        _id:
+          type: string
+        item_id:
+          type: string
+        employee_id:
+          type: string
+        issued_by:
+          type: string
+        assigned_date:
+          type: string
+          format: date-time
+        expected_return_date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [assigned, in_use, returned, lost, damaged, transferred]
+        quantity:
+          type: number
+        purpose:
+          type: string
+        is_overdue:
+          type: boolean
+
+    Livestock:
+      type: object
+      properties:
+        _id:
+          type: string
+        tag_number:
+          type: string
+        name:
+          type: string
+        species:
+          type: string
+          enum: [Cattle, Goat, Sheep, Chicken, Duck, Other]
+        gender:
+          type: string
+          enum: [male, female]
+        status:
+          type: string
+          enum: [active, sold, deceased, transferred]
+
+    Feed:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        status:
+          type: string
+          enum: [available, low_stock, out_of_stock, expired]
+
+    Maintenance:
+      type: object
+      properties:
+        _id:
+          type: string
+        item_id:
+          type: string
+        title:
+          type: string
+        maintenance_type:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        scheduled_date:
+          type: string
+          format: date-time
+
+    Reservation:
+      type: object
+      properties:
+        _id:
+          type: string
+        item_id:
+          type: string
+        user_id:
+          type: string
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, confirmed, active, completed, cancelled]
+
+    Approval:
+      type: object
+      properties:
+        _id:
+          type: string
+        request_type:
+          type: string
+          enum: [assignment, purchase, maintenance, reservation, other]
+        title:
+          type: string
+        requested_by:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+
+    Notification:
+      type: object
+      properties:
+        _id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    AuditLog:
+      type: object
+      properties:
+        _id:
+          type: string
+        user_id:
+          type: string
+        action:
+          type: string
+        entity_type:
+          type: string
+        created_at:
+          type: string
+          format: date-time
 
 tags:
   - name: Auth
-    description: Authentication related endpoints
   - name: Items
-    description: Item CRUD endpoints
+  - name: Categories
+  - name: Locations
+  - name: Suppliers
+  - name: Purchase Orders
+  - name: Stock Movements
+  - name: Stock Transfers
+  - name: Assignments
+  - name: Product Assignments
+  - name: Livestock
+  - name: Feeds
+  - name: Maintenance
+  - name: Reservations
+  - name: Approvals
+  - name: Users
+  - name: Dashboard
+  - name: Audit
+  - name: Reports
+  - name: Export
+  - name: Notifications
 
 paths:
-  /api/v1/auth/login:
+  # AUTH
+  /auth/register:
     post:
       tags: [Auth]
-      summary: Log in and receive a JWT
+      summary: Register a new user
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginRequest"
+              type: object
+              required: [username, email, password]
+              properties:
+                username: { type: string }
+                email: { type: string }
+                password: { type: string }
+                full_name: { type: string }
       responses:
-        "200":
-          description: Successful login
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LoginResponse"
-        "401":
-          description: Invalid credentials
+        201:
+          description: User registered
+        400:
+          description: Validation error
 
-  /api/v1/items:
-    get:
-      tags: [Items]
-      summary: List items (requires authentication)
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: query
-          name: q
-          schema:
-            type: string
-          description: Free-text search
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
       responses:
-        "200":
-          description: A list of items
+        200:
+          description: Login successful
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Item"
-        "401":
-          description: Unauthorized
+                  success: { type: boolean }
+                  token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      summary: Get current user profile
+      responses:
+        200:
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ITEMS
+  /items:
+    get:
+      tags: [Items]
+      security: [{ bearerAuth: [] }]
+      summary: Get all items
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - in: query
+          name: category
+          schema: { type: string }
+      responses:
+        200:
+          description: List of items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Item'
+    post:
+      tags: [Items]
+      security: [{ bearerAuth: [] }]
+      summary: Create a new item
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+      responses:
+        201:
+          description: Item created
+  
+  /items/{id}:
+    get:
+      tags: [Items]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Item details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Item' }
+    put:
+      tags: [Items]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+      responses:
+        200:
+          description: Item updated
+    delete:
+      tags: [Items]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Item deleted
+
+  /items/categories:
+    get:
+      tags: [Items]
+      security: [{ bearerAuth: [] }]
+      summary: Get item categories (distinct)
+      responses:
+        200:
+          description: List of categories
+
+  /items/low-stock:
+    get:
+      tags: [Items]
+      security: [{ bearerAuth: [] }]
+      summary: Get low stock items
+      responses:
+        200:
+          description: List of low stock items
+
+  # CATEGORIES
+  /categories:
+    get:
+      tags: [Categories]
+      security: [{ bearerAuth: [] }]
+      summary: Get all categories
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - in: query
+          name: flat
+          schema: { type: boolean }
+          description: Return flat list instead of tree
+      responses:
+        200:
+          description: List of categories
+    post:
+      tags: [Categories]
+      security: [{ bearerAuth: [] }]
+      summary: Create category
+      responses:
+        201:
+          description: Category created
+
+  /categories/tree:
+    get:
+      tags: [Categories]
+      security: [{ bearerAuth: [] }]
+      summary: Get categories as a tree structure
+      responses:
+        200:
+          description: Category tree
+
+  # LOCATIONS
+  /locations:
+    get:
+      tags: [Locations]
+      security: [{ bearerAuth: [] }]
+      summary: Get all locations
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        200:
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Location'
+    post:
+      tags: [Locations]
+      security: [{ bearerAuth: [] }]
+      summary: Create location
+      responses:
+        201:
+          description: Location created
+
+  /locations/{id}:
+    get:
+      tags: [Locations]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Location details
+
+  # SUPPLIERS
+  /suppliers:
+    get:
+      tags: [Suppliers]
+      security: [{ bearerAuth: [] }]
+      summary: Get all suppliers
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        200:
+          description: List of suppliers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Supplier'
+    post:
+      tags: [Suppliers]
+      security: [{ bearerAuth: [] }]
+      summary: Create supplier
+      responses:
+        201:
+          description: Supplier created
+
+  /suppliers/{id}:
+    get:
+      tags: [Suppliers]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Supplier details
+
+  # PURCHASE ORDERS
+  /purchase-orders:
+    get:
+      tags: [Purchase Orders]
+      security: [{ bearerAuth: [] }]
+      summary: Get all purchase orders
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        200:
+          description: List of purchase orders
+    post:
+      tags: [Purchase Orders]
+      security: [{ bearerAuth: [] }]
+      summary: Create purchase order
+      responses:
+        201:
+          description: Purchase order created
+
+  /purchase-orders/{id}:
+    get:
+      tags: [Purchase Orders]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Purchase order details
+    put:
+      tags: [Purchase Orders]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Purchase order updated
+
+  /purchase-orders/{id}/approve:
+    post:
+      tags: [Purchase Orders]
+      security: [{ bearerAuth: [] }]
+      summary: Approve purchase order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Purchase order approved
+
+  # STOCK MOVEMENTS
+  /stock-movements:
+    get:
+      tags: [Stock Movements]
+      security: [{ bearerAuth: [] }]
+      summary: Get all stock movements
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - in: query
+          name: item_id
+          schema: { type: string }
+        - in: query
+          name: location_id
+          schema: { type: string }
+        - in: query
+          name: movement_type
+          schema: { type: string }
+        - in: query
+          name: start_date
+          schema: { type: string, format: date }
+        - in: query
+          name: end_date
+          schema: { type: string, format: date }
+      responses:
+        200:
+          description: List of stock movements
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/StockMovement'
+    post:
+      tags: [Stock Movements]
+      security: [{ bearerAuth: [] }]
+      summary: Create stock movement (Manual adjustment)
+      responses:
+        201:
+          description: Stock movement created
+
+  # STOCK TRANSFERS
+  /stock-transfers:
+    get:
+      tags: [Stock Transfers]
+      security: [{ bearerAuth: [] }]
+      summary: Get all stock transfers
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        200:
+          description: List of stock transfers
+    post:
+      tags: [Stock Transfers]
+      security: [{ bearerAuth: [] }]
+      summary: Create stock transfer request
+      responses:
+        201:
+          description: Stock transfer created
+
+  /stock-transfers/{id}/approve:
+    post:
+      tags: [Stock Transfers]
+      security: [{ bearerAuth: [] }]
+      summary: Approve stock transfer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Stock transfer approved
+
+  # ASSIGNMENTS (Old)
+  /assignments:
+    get:
+      tags: [Assignments]
+      security: [{ bearerAuth: [] }]
+      summary: Get all assignments
+      responses:
+        200:
+          description: List of assignments
+
+  # PRODUCT ASSIGNMENTS (New)
+  /product-assignments:
+    get:
+      tags: [Product Assignments]
+      security: [{ bearerAuth: [] }]
+      summary: Get all product assignments
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        200:
+          description: List of product assignments
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProductAssignment'
+    post:
+      tags: [Product Assignments]
+      security: [{ bearerAuth: [] }]
+      summary: Create product assignment
+      responses:
+        201:
+          description: Product assignment created
+
+  /product-assignments/overdue:
+    get:
+      tags: [Product Assignments]
+      security: [{ bearerAuth: [] }]
+      summary: Get overdue product assignments
+      responses:
+        200:
+          description: List of overdue assignments
+
+  /product-assignments/employee/{employeeId}:
+    get:
+      tags: [Product Assignments]
+      security: [{ bearerAuth: [] }]
+      summary: Get assignments for an employee
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: List of assignments
+
+  # LIVESTOCK
+  /livestock:
+    get:
+      tags: [Livestock]
+      security: [{ bearerAuth: [] }]
+      summary: Get all livestock
+      responses:
+        200:
+          description: List of livestock
+    post:
+      tags: [Livestock]
+      security: [{ bearerAuth: [] }]
+      summary: Create livestock
+      responses:
+        201:
+          description: Livestock created
+
+  # FEEDS
+  /feeds:
+    get:
+      tags: [Feeds]
+      security: [{ bearerAuth: [] }]
+      summary: Get all feeds
+      responses:
+        200:
+          description: List of feeds
+    post:
+      tags: [Feeds]
+      security: [{ bearerAuth: [] }]
+      summary: Create feed
+      responses:
+        201:
+          description: Feed created
+
+  # MAINTENANCE
+  /maintenance:
+    get:
+      tags: [Maintenance]
+      security: [{ bearerAuth: [] }]
+      summary: Get all maintenance records
+      responses:
+        200:
+          description: List of maintenance records
+    post:
+      tags: [Maintenance]
+      security: [{ bearerAuth: [] }]
+      summary: Create maintenance record
+      responses:
+        201:
+          description: Maintenance record created
+
+  /maintenance/upcoming:
+    get:
+      tags: [Maintenance]
+      security: [{ bearerAuth: [] }]
+      summary: Get upcoming maintenance
+      responses:
+        200:
+          description: List of upcoming maintenance
+
+  # RESERVATIONS
+  /reservations:
+    get:
+      tags: [Reservations]
+      security: [{ bearerAuth: [] }]
+      summary: Get all reservations
+      responses:
+        200:
+          description: List of reservations
+    post:
+      tags: [Reservations]
+      security: [{ bearerAuth: [] }]
+      summary: Create reservation
+      responses:
+        201:
+          description: Reservation created
+
+  # APPROVALS
+  /approvals:
+    get:
+      tags: [Approvals]
+      security: [{ bearerAuth: [] }]
+      summary: Get all approvals
+      responses:
+        200:
+          description: List of approvals
+    post:
+      tags: [Approvals]
+      security: [{ bearerAuth: [] }]
+      summary: Create approval request
+      responses:
+        201:
+          description: Approval request created
+
+  /approvals/pending:
+    get:
+      tags: [Approvals]
+      security: [{ bearerAuth: [] }]
+      summary: Get pending approvals
+      responses:
+        200:
+          description: List of pending approvals
+
+  /approvals/{id}/approve:
+    patch:
+      tags: [Approvals]
+      security: [{ bearerAuth: [] }]
+      summary: Approve request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Request approved
+
+  /approvals/{id}/reject:
+    patch:
+      tags: [Approvals]
+      security: [{ bearerAuth: [] }]
+      summary: Reject request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Request rejected
+
+  # USERS
+  /users:
+    get:
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      summary: Get all users (Admin/Manager)
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        200:
+          description: List of users
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+    post:
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      summary: Create user (Admin)
+      responses:
+        201:
+          description: User created
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      summary: Get user by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: User details
+
+  # DASHBOARD
+  /dashboard/stats:
+    get:
+      tags: [Dashboard]
+      security: [{ bearerAuth: [] }]
+      summary: Get dashboard statistics
+      responses:
+        200:
+          description: Dashboard stats
+
+  # AUDIT
+  /audit:
+    get:
+      tags: [Audit]
+      security: [{ bearerAuth: [] }]
+      summary: Get all audit logs
+      responses:
+        200:
+          description: List of audit logs
+
+  # REPORTS
+  /reports/low-stock:
+    get:
+      tags: [Reports]
+      security: [{ bearerAuth: [] }]
+      summary: Get low stock report
+      responses:
+        200:
+          description: Low stock report
+
+  /reports/assigned-items:
+    get:
+      tags: [Reports]
+      security: [{ bearerAuth: [] }]
+      summary: Get assigned items report
+      responses:
+        200:
+          description: Assigned items report
+
+  # EXPORT
+  /export/items/csv:
+    get:
+      tags: [Export]
+      security: [{ bearerAuth: [] }]
+      summary: Export items to CSV
+      responses:
+        200:
+          description: CSV file
+
+  # NOTIFICATIONS
+  /notifications:
+    get:
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      summary: Get user notifications
+      responses:
+        200:
+          description: List of notifications
+
+  /notifications/mark-all-read:
+    post:
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      summary: Mark all notifications as read
+      responses:
+        200:
+          description: Notifications marked as read

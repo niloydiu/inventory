@@ -1,95 +1,67 @@
 const StockMovement = require("../models/StockMovement");
 const Item = require("../models/Item");
 const { validationResult } = require("express-validator");
+const { paginatedQuery } = require("../utils/queryHelpers");
 
 // Get all stock movements with pagination and filtering
 exports.getAllMovements = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      item_id,
-      location_id,
-      movement_type,
-      reference_type,
-      start_date,
-      end_date,
-      sort = "-created_at",
-    } = req.query;
-
-    const query = {};
-
-    // Filter by item
-    if (item_id) {
-      query.item_id = item_id;
+    const cleanQuery = { ...req.query };
+    
+    // Handle date range parameters specially as paginatedQuery expects exact matches or standard range format
+    if (cleanQuery.start_date) {
+      const startDate = new Date(cleanQuery.start_date);
+      startDate.setHours(0, 0, 0, 0);
+      cleanQuery.created_at_min = startDate; // Map to helper format
+      delete cleanQuery.start_date;
     }
-
-    // Filter by location (check both from and to locations for transfers)
-    if (location_id) {
-      query.$or = [
-        { from_location_id: location_id },
-        { to_location_id: location_id }
-      ];
+    if (cleanQuery.end_date) {
+      const endDate = new Date(cleanQuery.end_date);
+      endDate.setHours(23, 59, 59, 999);
+      cleanQuery.created_at_max = endDate; // Map to helper format
+      delete cleanQuery.end_date;
     }
-
-    // Filter by movement type
-    if (movement_type) {
-      query.movement_type = movement_type;
-    }
-
-    // Filter by reference type
-    if (reference_type) {
-      query.reference_type = reference_type;
-    }
-
-    // Filter by date range (use created_at since movement_date is just an alias)
-    if (start_date || end_date) {
-      query.created_at = {};
-      if (start_date) {
-        // Set start of day for start_date
-        const startDate = new Date(start_date);
-        startDate.setHours(0, 0, 0, 0);
-        query.created_at.$gte = startDate;
-      }
-      if (end_date) {
-        // Set end of day for end_date
-        const endDate = new Date(end_date);
-        endDate.setHours(23, 59, 59, 999);
-        query.created_at.$lte = endDate;
-      }
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const [rawMovements, total] = await Promise.all([
-      StockMovement.find(query)
-        .populate("item_id", "name sku")
-        .populate("from_location_id", "name code")
-        .populate("to_location_id", "name code")
-        .populate("performed_by", "full_name email")
-        .sort(sort)
-        .skip(skip)
-        .limit(parseInt(limit))
-        .lean(),
-      StockMovement.countDocuments(query),
-    ]);
+    
+    // Handle location_id OR logic (from or to)
+    // paginatedQuery handles straightforward AND logic.
+    // For complex OR logic like location_id being in from OR to, we might need to pass a custom filter or handle it here.
+    // The helper supports standard filters. For complex ones, we can manually construct the filter object and pass it.
+    
+    const result = await paginatedQuery(
+      StockMovement,
+      cleanQuery,
+      ["reference_number", "batch_number", "notes", "reason"],
+      [
+        { path: "item_id", select: "name sku" },
+        { path: "from_location_id", select: "name code" },
+        { path: "to_location_id", select: "name code" },
+        { path: "performed_by", select: "full_name email" }
+      ]
+    );
 
     // Transform data to match frontend expectations
-    const movements = rawMovements.map(movement => ({
-      ...movement,
-      movement_date: movement.created_at,
-      quantity_change: movement.quantity,
-      quantity_after: movement.balance_after,
-      location_id: movement.to_location_id || movement.from_location_id, // For backward compatibility
-    }));
+    const movements = result.data.map(movement => {
+      const mObj = movement.toObject ? movement.toObject() : movement;
+      return {
+        ...mObj,
+        movement_date: mObj.created_at,
+        quantity_change: mObj.quantity,
+        quantity_after: mObj.balance_after,
+        location_id: mObj.to_location_id || mObj.from_location_id, // For backward compatibility
+      };
+    });
 
     res.json({
-      movements,
+      success: true,
+      ...result,
+      data: movements, // Override data with transformed version
+      // Maintain backward compatibility for 'movements' and 'pagination' keys if needed
+      movements: movements,
       pagination: {
-        current_page: parseInt(page),
-        total_pages: Math.ceil(total / parseInt(limit)),
-        total_items: total,
-        items_per_page: parseInt(limit),
+        current_page: result.page,
+        total_pages: result.pages,
+        total_items: result.total,
+        items_per_page: result.limit,
       },
     });
   } catch (error) {

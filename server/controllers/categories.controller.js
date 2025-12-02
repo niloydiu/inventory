@@ -1,17 +1,47 @@
 const Category = require("../models/Category");
 const { validationResult } = require("express-validator");
+const { paginatedQuery } = require("../utils/queryHelpers");
 
 // Get all categories (hierarchical tree structure)
 exports.getAllCategories = async (req, res) => {
   try {
-    const { flat = false, parent_id } = req.query;
+    const { flat = false, parent_id, page, limit } = req.query;
 
+    // If explicit pagination is requested OR it's a flat list, use pagination
+    if (page || limit || flat === 'true') {
+       // For flat list or paginated view
+       const result = await paginatedQuery(
+        Category,
+        req.query,
+        ['name', 'code', 'description'],
+        { path: 'parent_id', select: 'name code path' }
+      );
+      
+      // Add child counts
+      const categoriesWithCounts = await Promise.all(
+        result.data.map(async (category) => {
+          const categoryObj = category.toObject ? category.toObject() : category;
+          const childCount = await Category.countDocuments({
+            parent_id: category._id,
+          });
+          return { ...categoryObj, child_count: childCount };
+        })
+      );
+
+      return res.json({
+        success: true,
+        ...result,
+        data: categoriesWithCounts
+      });
+    }
+
+    // Original tree/list logic for non-paginated requests (backward compatibility or specific tree view)
     let query = {};
 
     // If parent_id is provided, get children of that parent
     if (parent_id) {
       query.parent_id = parent_id === "null" ? null : parent_id;
-    } else if (!flat) {
+    } else if (flat !== 'true') {
       // If flat is false and no parent_id, get only root categories
       query.parent_id = null;
     }
@@ -22,7 +52,7 @@ exports.getAllCategories = async (req, res) => {
       .lean();
 
     // If hierarchical, build tree structure
-    if (!flat && !parent_id) {
+    if (flat !== 'true' && !parent_id) {
       const categoriesWithChildren = await Promise.all(
         categories.map(async (category) => {
           const childCount = await Category.countDocuments({

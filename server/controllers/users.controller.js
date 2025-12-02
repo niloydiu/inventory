@@ -1,16 +1,28 @@
 const { User } = require("../models");
 const bcrypt = require("bcryptjs");
+const { paginatedQuery } = require("../utils/queryHelpers");
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find()
-      .select("-password_hash")
-      .sort({ created_at: -1 });
+    const result = await paginatedQuery(
+      User,
+      req.query,
+      ["username", "email", "full_name", "role"],
+      null
+    );
+
+    // Remove password hash from results
+    const users = result.data.map(user => {
+      const userObj = user.toObject ? user.toObject() : user;
+      delete userObj.password_hash;
+      return userObj;
+    });
 
     res.json({
       success: true,
-      data: users,
+      ...result,
+      data: users
     });
   } catch (error) {
     console.error("Get users error:", error);
