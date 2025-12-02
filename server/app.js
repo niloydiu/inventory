@@ -244,6 +244,7 @@ const stockTransfersRoutes = require("./routes/stockTransfers.routes");
 const stockMovementsRoutes = require("./routes/stockMovements.routes");
 const notificationsRoutes = require("./routes/notifications.routes");
 const productAssignmentsRoutes = require("./routes/productAssignments.routes");
+const initSwagger = require("./swagger");
 
 // API routes
 const API_PREFIX = "/api/v1";
@@ -276,6 +277,9 @@ app.use(`${API_PREFIX}/stock-transfers`, stockTransfersRoutes);
 app.use(`${API_PREFIX}/stock-movements`, stockMovementsRoutes);
 app.use(`${API_PREFIX}/notifications`, notificationsRoutes);
 app.use(`${API_PREFIX}/product-assignments`, productAssignmentsRoutes);
+
+// Mount Swagger UI (only in non-production by default; enable in production with ENABLE_API_DOCS=true)
+initSwagger(app, { apiPrefix: API_PREFIX });
 
 // Health check
 app.get("/health", (req, res) => {

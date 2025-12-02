@@ -1,0 +1,102 @@
+openapi: 3.0.1
+info:
+  title: Inventory API
+  version: 1.0.0
+  description: |
+    OpenAPI documentation for the Inventory API.
+    This file includes a small subset of endpoints to get started.
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: /
+    description: Relative server (uses current host)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+    Item:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        sku:
+          type: string
+        availableQuantity:
+          type: integer
+
+tags:
+  - name: Auth
+    description: Authentication related endpoints
+  - name: Items
+    description: Item CRUD endpoints
+
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive a JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+
+  /api/v1/items:
+    get:
+      tags: [Items]
+      summary: List items (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Free-text search
+      responses:
+        '200':
+          description: A list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Item'
+        '401':
+          description: Unauthorized
