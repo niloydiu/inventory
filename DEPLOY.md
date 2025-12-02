@@ -221,6 +221,58 @@ pm2 save
 pm2 startup
 ```
 
+## ⚠️ Default branch note
+
+The repository default branch has been renamed to `main`. If you previously used `master` in local workflows, update your local branch and upstream to track `origin/main`.
+
+Common commands to fix your local clone (run from the repo root):
+
+PowerShell (Windows):
+```powershell
+# Fetch latest remote refs
+git fetch origin --prune
+
+# If you don't have a local `main` yet, create it to track the remote:
+git checkout -b main origin/main
+
+# If you have a local `master` and want to rename it to `main`:
+# (switch to master first if needed)
+git switch master
+git branch -m master main
+
+# Ensure `main` tracks origin/main
+git fetch origin
+git branch --set-upstream-to=origin/main main
+git remote set-head origin main
+
+# Pull updates from the new default branch
+git pull
+```
+
+POSIX Shell (Linux / macOS):
+```bash
+# Fetch latest remote refs
+git fetch origin --prune
+
+# Create local main if it doesn't exist
+git checkout -b main origin/main
+
+# Rename local master to main (if you have master)
+# git branch -m master main
+
+# Set upstream and update remote HEAD
+git branch --set-upstream-to=origin/main main
+git remote set-head origin main
+
+# Pull
+git pull
+```
+
+Notes:
+- `git branch -m` renames your local branch only; run `git push -u origin main` if you want to push a newly renamed local branch to the remote.
+- `git remote set-head origin main` updates the local information about the remote default branch.
+- Coordinate with collaborators before renaming shared branches.
+
 ## 📞 Support
 
 যদি কোনো সমস্যা হয়, PM2 logs check করুন:
