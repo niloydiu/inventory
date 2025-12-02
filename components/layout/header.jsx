@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
+import { logo } from "@/public/images";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +42,19 @@ export function Header() {
           <Sidebar />
         </SheetContent>
       </Sheet>
+      <div className="flex items-center gap-3">
+        <Image
+          src={logo}
+          alt="Aftab Logo"
+          width={40}
+          height={40}
+          className="object-contain"
+          priority
+        />
+        <span className="hidden sm:inline-block text-lg font-bold">
+          Inventory System
+        </span>
+      </div>
       <div className="w-full flex-1">
         {/* Search or breadcrumbs could go here */}
       </div>
