@@ -1,21 +1,19 @@
 const { Location, User } = require('../models');
+const { paginatedQuery } = require('../utils/queryHelpers');
 
 // Get all locations
 exports.getAllLocations = async (req, res) => {
   try {
-    const { type, status } = req.query;
-    
-    const filter = {};
-    if (type) filter.type = type;
-    if (status) filter.status = status;
-
-    const locations = await Location.find(filter)
-      .populate('manager_id', 'username full_name')
-      .sort({ name: 1 });
+    const result = await paginatedQuery(
+      Location,
+      req.query,
+      ['name', 'code', 'description', 'type'],
+      { path: 'manager_id', select: 'username full_name' }
+    );
 
     res.json({
       success: true,
-      data: locations
+      ...result
     });
   } catch (error) {
     console.error('Get locations error:', error);
