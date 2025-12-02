@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { itemSchema } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
@@ -22,30 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-
-const categories = [
-  "Software",
-  "Hardware",
-  "Stationery",
-  "Essentials",
-  "Consumable",
-];
-const statuses = ["available", "in_use", "maintenance", "retired"];
-const unitTypes = [
-  "units",
-  "kg",
-  "lbs",
-  "liters",
-  "gallons",
-  "meters",
-  "feet",
-  "boxes",
-  "pairs",
-  "sets",
-  "pieces",
-  "packs",
-  "bottles",
-];
+import { useCategories } from "@/lib/categories-context";
+import { ITEM_STATUSES, ITEM_UNIT_TYPES } from "@/lib/constants";
 
 export function ItemForm({
   defaultValues,
@@ -69,9 +48,50 @@ export function ItemForm({
     },
   });
 
+  const { categories: providerCategories = [], loading: categoriesLoading } =
+    useCategories();
+
+  // Extract categories from provider
+  const categoryOptions =
+    providerCategories && providerCategories.length > 0
+      ? providerCategories
+      : [
+          { _id: "Hardware", name: "Hardware" },
+          { _id: "Software", name: "Software" },
+          { _id: "Stationery", name: "Stationery" },
+          { _id: "Essentials", name: "Essentials" },
+          { _id: "Consumable", name: "Consumable" },
+        ];
+
+  // Set default category to first provider category when available
+  useEffect(() => {
+    if (!defaultValues && providerCategories && providerCategories.length > 0) {
+      const first = providerCategories[0]._id || providerCategories[0];
+      form.setValue("category", first);
+    }
+  }, [defaultValues, providerCategories, form]);
+
+  const handleSubmitWrapper = (data) => {
+    // Find selected category object
+    const selectedCategory = categoryOptions.find(
+      (c) => c._id === data.category || c === data.category
+    );
+
+    // Format payload
+    const payload = {
+      ...data,
+      // If it's a real category object, send ID as category_id and name as category
+      // If it's a string (legacy), send it as category
+      category: selectedCategory?.name || data.category,
+      category_id: selectedCategory?._id && selectedCategory._id !== selectedCategory.name ? selectedCategory._id : undefined,
+    };
+
+    onSubmit(payload);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmitWrapper)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -96,18 +116,25 @@ export function ItemForm({
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Select category">
+                        {categoryOptions.find((c) => (c._id || c) === field.value)?.name || field.value || "Select category"}
+                      </SelectValue>
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
+                    {categoryOptions.map((cat) => {
+                      const value = cat._id || cat;
+                      const label = cat.name || cat;
+                      return (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -145,7 +172,7 @@ export function ItemForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {unitTypes.map((unit) => (
+                    {ITEM_UNIT_TYPES.map((unit) => (
                       <SelectItem key={unit} value={unit}>
                         {unit}
                       </SelectItem>
@@ -234,7 +261,7 @@ export function ItemForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {statuses.map((status) => (
+                    {ITEM_STATUSES.map((status) => (
                       <SelectItem key={status} value={status}>
                         {status.replace("_", " ").toUpperCase()}
                       </SelectItem>

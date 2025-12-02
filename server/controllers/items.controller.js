@@ -100,6 +100,7 @@ exports.createItem = async (req, res) => {
     const mappedData = {
       name: itemData.name,
       category: itemData.category,
+      category_id: itemData.category_id,
       description: itemData.description || "",
       quantity: itemData.quantity || 0,
       available_quantity: itemData.quantity || 0,
@@ -144,10 +145,9 @@ exports.updateItem = async (req, res) => {
     const mappedData = {};
 
     if (itemData.name !== undefined) mappedData.name = itemData.name;
-    if (itemData.category !== undefined)
-      mappedData.category = itemData.category;
-    if (itemData.description !== undefined)
-      mappedData.description = itemData.description;
+    if (itemData.category !== undefined) mappedData.category = itemData.category;
+    if (itemData.category_id !== undefined) mappedData.category_id = itemData.category_id;
+    if (itemData.description !== undefined) mappedData.description = itemData.description;
     if (itemData.quantity !== undefined) {
       mappedData.quantity = itemData.quantity;
       mappedData.available_quantity = itemData.quantity;
