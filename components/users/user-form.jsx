@@ -19,8 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-
-const roles = ["admin", "manager", "employee"];
+import { USER_ROLES } from "@/lib/constants";
 
 export function UserForm({
   defaultValues,
@@ -120,7 +119,7 @@ export function UserForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {roles.map((role) => (
+                  {USER_ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
                       {role.toUpperCase()}
                     </SelectItem>

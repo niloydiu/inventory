@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
+import { CategoriesProvider } from "@/lib/categories-context";
 import { Toaster } from "@/components/ui/sonner";
 import { CacheBuster } from "@/lib/cache-buster";
 
@@ -17,8 +18,10 @@ export default function RootLayout({ children }) {
       <body className={inter.className} suppressHydrationWarning>
         <AuthProvider>
           <CacheBuster />
-          {children}
-          <Toaster />
+          <CategoriesProvider>
+            {children}
+            <Toaster />
+          </CategoriesProvider>
         </AuthProvider>
       </body>
     </html>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useCategories } from "@/lib/categories-context";
 import {
   Card,
   CardContent,
@@ -36,61 +37,36 @@ import {
   ChevronRight,
   ChevronDown,
 } from "lucide-react";
-import apiClient from "@/lib/api-client";
 import { PageLoader } from "@/components/ui/loader";
 
 export default function CategoriesPage() {
   const { token } = useAuth();
-  const [categories, setCategories] = useState([]);
-  const [tree, setTree] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [formDialog, setFormDialog] = useState(null);
   const [formData, setFormData] = useState({});
   const [expanded, setExpanded] = useState(new Set());
 
-  useEffect(() => {
-    fetchCategories();
-    fetchTree();
-  }, [token]);
-
-  async function fetchCategories() {
-    if (!token) return;
-
-    try {
-      const response = await apiClient.get("/categories?flat=true", token);
-      setCategories(response.categories || []);
-    } catch (error) {
-      toast.error("Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchTree() {
-    if (!token) return;
-
-    try {
-      const response = await apiClient.get("/categories/tree", token);
-      setTree(response.category_tree || []);
-    } catch (error) {
-      console.error("Failed to load tree");
-    }
-  }
+  const {
+    categories,
+    tree,
+    loading,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+  } = useCategories();
 
   async function handleSubmit() {
     try {
       if (formDialog === "new") {
-        await apiClient.post("/categories", formData, token);
+        await createCategory(formData);
         toast.success("Category created successfully");
       } else {
-        await apiClient.put(`/categories/${formDialog}`, formData, token);
+        await updateCategory(formDialog, formData);
         toast.success("Category updated successfully");
       }
 
       setFormDialog(null);
       setFormData({});
-      fetchCategories();
-      fetchTree();
+      // provider refreshes data
     } catch (error) {
       toast.error(error.message || "Operation failed");
     }
@@ -105,10 +81,8 @@ export default function CategoriesPage() {
       return;
 
     try {
-      await apiClient.delete(`/categories/${id}`, token);
+      await deleteCategory(id);
       toast.success("Category deleted successfully");
-      fetchCategories();
-      fetchTree();
     } catch (error) {
       toast.error(error.message || "Failed to delete category");
     }

@@ -25,17 +25,7 @@ const itemSchema = new mongoose.Schema(
     // Legacy category field for backward compatibility
     category: {
       type: String,
-      enum: [
-        "Software",
-        "Hardware",
-        "Stationery",
-        "Essentials",
-        "Consumable",
-        "Office Supplies",
-        "Electronics",
-        "Furniture",
-        "Other",
-      ],
+      trim: true,
     },
     quantity: {
       type: Number,

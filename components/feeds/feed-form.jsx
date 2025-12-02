@@ -23,17 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
-
-const feedTypes = [
-  "Cattle Feed",
-  "Poultry Feed",
-  "Goat Feed",
-  "Sheep Feed",
-  "Pig Feed",
-  "Fish Feed",
-  "Supplement",
-  "Other",
-];
+import { FEED_TYPES, FEED_UNITS } from "@/lib/constants";
 
 export function FeedForm({ defaultValues, onSubmit, isLoading }) {
   const form = useForm({
@@ -89,7 +79,7 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {feedTypes.map((type) => (
+                    {FEED_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}
                       </SelectItem>
@@ -131,11 +121,11 @@ export function FeedForm({ defaultValues, onSubmit, isLoading }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="kg">Kilograms (kg)</SelectItem>
-                    <SelectItem value="lbs">Pounds (lbs)</SelectItem>
-                    <SelectItem value="bags">Bags</SelectItem>
-                    <SelectItem value="tons">Tons</SelectItem>
-                    <SelectItem value="liters">Liters</SelectItem>
+                    {FEED_UNITS.map((unit) => (
+                      <SelectItem key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
