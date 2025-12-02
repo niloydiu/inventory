@@ -45,7 +45,8 @@ NEXT_PUBLIC_API_URL=http://localhost:6210/api/v1
 JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters-long
 ```
 
-**Important:** 
+**Important:**
+
 - `FRONTEND_URL` এ আপনার actual domain/IP add করুন
 - `NEXT_PUBLIC_API_URL` এ server এর IP বা domain add করুন (localhost না হলে)
 
@@ -228,6 +229,7 @@ The repository default branch has been renamed to `main`. If you previously used
 Common commands to fix your local clone (run from the repo root):
 
 PowerShell (Windows):
+
 ```powershell
 # Fetch latest remote refs
 git fetch origin --prune
@@ -250,6 +252,7 @@ git pull
 ```
 
 POSIX Shell (Linux / macOS):
+
 ```bash
 # Fetch latest remote refs
 git fetch origin --prune
@@ -269,6 +272,7 @@ git pull
 ```
 
 Notes:
+
 - `git branch -m` renames your local branch only; run `git push -u origin main` if you want to push a newly renamed local branch to the remote.
 - `git remote set-head origin main` updates the local information about the remote default branch.
 - Coordinate with collaborators before renaming shared branches.
@@ -276,7 +280,7 @@ Notes:
 ## 📞 Support
 
 যদি কোনো সমস্যা হয়, PM2 logs check করুন:
+
 ```bash
 pm2 logs --lines 100
 ```
-
