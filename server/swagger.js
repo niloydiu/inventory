@@ -1,20 +1,24 @@
-const fs = require('fs');
-const path = require('path');
-const yaml = require('yaml');
-const swaggerUi = require('swagger-ui-express');
+const fs = require("fs");
+const path = require("path");
+const yaml = require("yaml");
+const swaggerUi = require("swagger-ui-express");
 
 let spec = null;
 
 function loadSpec() {
   if (spec) return spec;
-  const file = path.join(__dirname, 'docs', 'openapi.yaml');
+  const file = path.join(__dirname, "docs", "openapi.yaml");
   try {
-    const content = fs.readFileSync(file, 'utf8');
+    const content = fs.readFileSync(file, "utf8");
     spec = yaml.parse(content);
     return spec;
   } catch (err) {
-    console.error('Failed to load OpenAPI spec:', err);
-    spec = { openapi: '3.0.1', info: { title: 'API', version: '0.0.0' }, paths: {} };
+    console.error("Failed to load OpenAPI spec:", err);
+    spec = {
+      openapi: "3.0.1",
+      info: { title: "API", version: "0.0.0" },
+      paths: {},
+    };
     return spec;
   }
 }
@@ -25,15 +29,19 @@ function loadSpec() {
  *  - apiPrefix: base path for API (default: '/api/v1')
  */
 function initSwagger(app, options = {}) {
-  const apiPrefix = options.apiPrefix || '/api/v1';
+  const apiPrefix = options.apiPrefix || "/api/v1";
   const docsPath = `${apiPrefix}/docs`;
   const jsonPath = `${apiPrefix}/docs.json`;
 
   const openapi = loadSpec();
 
-  const shouldMount = process.env.NODE_ENV !== 'production' || process.env.ENABLE_API_DOCS === 'true';
+  const shouldMount =
+    process.env.NODE_ENV !== "production" ||
+    process.env.ENABLE_API_DOCS === "true";
   if (!shouldMount) {
-    console.log('Swagger UI not mounted (production and ENABLE_API_DOCS not set)');
+    console.log(
+      "Swagger UI not mounted (production and ENABLE_API_DOCS not set)"
+    );
     return;
   }
 

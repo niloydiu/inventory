@@ -28,65 +28,75 @@ if (process.env.NODE_ENV === "production") {
 // CORS - MUST BE FIRST, before any other middleware
 // Completely open CORS - Allow ALL origins (* equivalent)
 // Note: Browser doesn't allow literal '*' with credentials, so we use function that allows all
-console.log("🌐 CORS: Completely open - Allowing ALL origins (* equivalent), methods, and headers");
+console.log(
+  "🌐 CORS: Completely open - Allowing ALL origins (* equivalent), methods, and headers"
+);
 
 // Manual CORS headers as fallback (before CORS middleware)
 // This ensures CORS works even if cors middleware fails
 app.use((req, res, next) => {
   // Get the origin from request - allow ANY origin (equivalent to *)
   const origin = req.headers.origin;
-  
+
   // Set CORS headers manually - Allow ALL origins
   // When origin exists, use it (required for credentials)
   // When no origin, use '*' (for non-browser requests)
   if (origin) {
     // Allow this specific origin (effectively allows ALL origins via function)
-    res.header('Access-Control-Allow-Origin', origin);
+    res.header("Access-Control-Allow-Origin", origin);
   } else {
     // No origin header (non-browser request) - allow all
-    res.header('Access-Control-Allow-Origin', '*');
+    res.header("Access-Control-Allow-Origin", "*");
   }
-  
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE');
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE"
+  );
   // Explicitly allow ALL common headers including cache-control
-  res.header('Access-Control-Allow-Headers', [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers',
-    'Cookie',
-    'Set-Cookie',
-    'X-Forwarded-For',
-    'Cache-Control',
-    'Pragma',
-    'Expires',
-    'If-Modified-Since',
-    'If-None-Match',
-    'X-Client-IP',
-    'User-Agent',
-    'Referer',
-    'Accept-Language',
-    'Accept-Encoding',
-    'Connection',
-    'Host'
-  ].join(', '));
-  res.header('Access-Control-Expose-Headers', '*'); // Expose all headers
-  res.header('Access-Control-Max-Age', '86400');
-  
+  res.header(
+    "Access-Control-Allow-Headers",
+    [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers",
+      "Cookie",
+      "Set-Cookie",
+      "X-Forwarded-For",
+      "Cache-Control",
+      "Pragma",
+      "Expires",
+      "If-Modified-Since",
+      "If-None-Match",
+      "X-Client-IP",
+      "User-Agent",
+      "Referer",
+      "Accept-Language",
+      "Accept-Encoding",
+      "Connection",
+      "Host",
+    ].join(", ")
+  );
+  res.header("Access-Control-Expose-Headers", "*"); // Expose all headers
+  res.header("Access-Control-Max-Age", "86400");
+
   // Log for debugging
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`✅ CORS: Allowing ${origin || 'no-origin'} - ${req.method} ${req.path}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      `✅ CORS: Allowing ${origin || "no-origin"} - ${req.method} ${req.path}`
+    );
   }
-  
+
   // Handle preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(204).end();
   }
-  
+
   next();
 });
 
@@ -96,37 +106,47 @@ app.use(
     origin: function (origin, callback) {
       // Allow ALL origins - equivalent to '*' but works with credentials
       // This function is called for each request and allows any origin
-      console.log(`🌐 CORS: Allowing origin: ${origin || 'no-origin'}`);
+      console.log(`🌐 CORS: Allowing origin: ${origin || "no-origin"}`);
       return callback(null, true); // Allow all origins
     },
     credentials: true, // Allow cookies and credentials
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE'],
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+      "HEAD",
+      "CONNECT",
+      "TRACE",
+    ],
     // Explicitly list ALL headers - '*' doesn't work in some CORS implementations
     allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Accept',
-      'Origin',
-      'Access-Control-Request-Method',
-      'Access-Control-Request-Headers',
-      'Cookie',
-      'Set-Cookie',
-      'X-Forwarded-For',
-      'Cache-Control', // This was missing!
-      'Pragma',
-      'Expires',
-      'If-Modified-Since',
-      'If-None-Match',
-      'X-Client-IP',
-      'User-Agent',
-      'Referer',
-      'Accept-Language',
-      'Accept-Encoding',
-      'Connection',
-      'Host'
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers",
+      "Cookie",
+      "Set-Cookie",
+      "X-Forwarded-For",
+      "Cache-Control", // This was missing!
+      "Pragma",
+      "Expires",
+      "If-Modified-Since",
+      "If-None-Match",
+      "X-Client-IP",
+      "User-Agent",
+      "Referer",
+      "Accept-Language",
+      "Accept-Encoding",
+      "Connection",
+      "Host",
     ],
-    exposedHeaders: '*', // Expose all headers
+    exposedHeaders: "*", // Expose all headers
     maxAge: 86400,
     preflightContinue: false,
     optionsSuccessStatus: 204,

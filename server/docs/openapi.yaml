@@ -61,15 +61,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
+        "200":
           description: Successful login
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '401':
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
           description: Invalid credentials
 
   /api/v1/items:
@@ -85,7 +85,7 @@ paths:
             type: string
           description: Free-text search
       responses:
-        '200':
+        "200":
           description: A list of items
           content:
             application/json:
@@ -97,6 +97,6 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Item'
-        '401':
+                      $ref: "#/components/schemas/Item"
+        "401":
           description: Unauthorized
