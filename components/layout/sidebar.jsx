@@ -103,6 +103,12 @@ const sidebarItems = [
     roles: ["admin", "manager", "employee"],
   },
   {
+    name: "Stock Adjustments",
+    href: "/stock-adjustments",
+    icon: Activity,
+    roles: ["admin", "manager"],
+  },
+  {
     name: "Maintenance",
     href: "/maintenance",
     icon: Wrench,

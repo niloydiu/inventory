@@ -1,0 +1,1011 @@
+{
+  "api_version": "v1",
+  "base_url": "/api/v1",
+  "endpoints": {
+    "auth": {
+      "prefix": "/api/v1/auth",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/register",
+          "description": "Register new user account",
+          "authentication": false,
+          "role_required": null,
+          "rate_limited": true,
+          "validation": "authValidationRules.register"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/login",
+          "description": "Login user and get authentication token",
+          "authentication": false,
+          "role_required": null,
+          "rate_limited": true,
+          "validation": "authValidationRules.login"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/logout",
+          "description": "Logout current user",
+          "authentication": false,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/auth/me",
+          "description": "Get current authenticated user profile",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/refresh",
+          "description": "Refresh authentication token",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "items": {
+      "prefix": "/api/v1/items",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/items",
+          "description": "Get all inventory items with pagination and filters",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/items/categories",
+          "description": "Get all item categories",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/items/low-stock",
+          "description": "Get items with low stock levels",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/items/bulk",
+          "description": "Bulk create multiple items",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "audit_logged": "bulk_create items"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/items/:id",
+          "description": "Get single item by ID",
+          "authentication": true,
+          "role_required": null,
+          "validates": "ObjectId"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/items",
+          "description": "Create new inventory item",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "validation": "itemValidationRules.create",
+          "audit_logged": "create item"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/items/:id",
+          "description": "Update existing item",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "validation": "itemValidationRules.update",
+          "validates": "ObjectId",
+          "audit_logged": "update item"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/items/:id",
+          "description": "Delete item by ID",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "validates": "ObjectId",
+          "audit_logged": "delete item"
+        }
+      ]
+    },
+    "assignments": {
+      "prefix": "/api/v1/assignments",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/assignments",
+          "description": "Get all item assignments",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/assignments",
+          "description": "Create new assignment",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "validation": "assignmentValidationRules.create",
+          "audit_logged": "create assignment"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/assignments/:id/return",
+          "description": "Return assigned item",
+          "authentication": true,
+          "role_required": null,
+          "validates": "ObjectId",
+          "audit_logged": "return assignment"
+        }
+      ]
+    },
+    "livestock": {
+      "prefix": "/api/v1/livestock",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/livestock",
+          "description": "Get all livestock records",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/livestock/:id",
+          "description": "Get single livestock record by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/livestock",
+          "description": "Create new livestock record",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "audit_logged": "create livestock"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/livestock/:id",
+          "description": "Update livestock record",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "audit_logged": "update livestock"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/livestock/:id",
+          "description": "Delete livestock record",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "audit_logged": "delete livestock"
+        }
+      ]
+    },
+    "feeds": {
+      "prefix": "/api/v1/feeds",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/feeds",
+          "description": "Get all feed records",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/feeds/:id",
+          "description": "Get single feed record by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/feeds",
+          "description": "Create new feed record",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "audit_logged": "create feed"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/feeds/:id",
+          "description": "Update feed record",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "audit_logged": "update feed"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/feeds/:id",
+          "description": "Delete feed record",
+          "authentication": true,
+          "role_required": ["admin", "manager"],
+          "audit_logged": "delete feed"
+        }
+      ]
+    },
+    "users": {
+      "prefix": "/api/v1/users",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/users",
+          "description": "Get all users",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "description": "Create new user",
+          "authentication": true,
+          "role_required": ["admin"],
+          "audit_logged": "create user"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users/:id",
+          "description": "Get single user by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/:id",
+          "description": "Update user",
+          "authentication": true,
+          "role_required": ["admin"],
+          "audit_logged": "update user"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/users/:id",
+          "description": "Delete user",
+          "authentication": true,
+          "role_required": ["admin"],
+          "audit_logged": "delete user"
+        }
+      ]
+    },
+    "dashboard": {
+      "prefix": "/api/v1/dashboard",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/dashboard/stats",
+          "description": "Get dashboard statistics",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "audit": {
+      "prefix": "/api/v1/audit",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/audit",
+          "description": "Get all audit logs",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/audit/stats",
+          "description": "Get audit statistics",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        }
+      ]
+    },
+    "locations": {
+      "prefix": "/api/v1/locations",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/locations",
+          "description": "Get all storage locations",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/locations/:id",
+          "description": "Get single location by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/locations",
+          "description": "Create new location",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/locations/:id",
+          "description": "Update location",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/locations/:id",
+          "description": "Delete location",
+          "authentication": true,
+          "role_required": ["admin"]
+        }
+      ]
+    },
+    "maintenance": {
+      "prefix": "/api/v1/maintenance",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/maintenance",
+          "description": "Get all maintenance records",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/maintenance/upcoming",
+          "description": "Get upcoming maintenance schedules",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/maintenance/:id",
+          "description": "Get single maintenance record by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/maintenance",
+          "description": "Create new maintenance record",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/maintenance/:id",
+          "description": "Update maintenance record",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/maintenance/:id",
+          "description": "Delete maintenance record",
+          "authentication": true,
+          "role_required": ["admin"]
+        }
+      ]
+    },
+    "reservations": {
+      "prefix": "/api/v1/reservations",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/reservations",
+          "description": "Get all reservations",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/reservations/:id",
+          "description": "Get single reservation by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/reservations",
+          "description": "Create new reservation",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/reservations/:id",
+          "description": "Update reservation",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/reservations/:id",
+          "description": "Delete reservation",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "approvals": {
+      "prefix": "/api/v1/approvals",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/approvals",
+          "description": "Get all approval requests",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/approvals/pending",
+          "description": "Get pending approval requests",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/approvals/:id",
+          "description": "Get single approval by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/approvals",
+          "description": "Create approval request",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/approvals/:id/approve",
+          "description": "Approve request",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/approvals/:id/reject",
+          "description": "Reject request",
+          "authentication": true,
+          "role_required": ["admin", "manager"]
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/approvals/:id",
+          "description": "Delete approval",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "reports": {
+      "prefix": "/api/v1/reports",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/reports/low-stock",
+          "description": "Get low stock report",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/reports/assigned-items",
+          "description": "Get assigned items report",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/reports/seat-usage/:itemId",
+          "description": "Get seat usage report for specific item",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "export": {
+      "prefix": "/api/v1/export",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/export/items/csv",
+          "description": "Export items to CSV",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/export/assignments/csv",
+          "description": "Export assignments to CSV",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/export/low-stock/csv",
+          "description": "Export low stock items to CSV",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "suppliers": {
+      "prefix": "/api/v1/suppliers",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/suppliers",
+          "description": "Get all suppliers",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/suppliers/stats",
+          "description": "Get supplier statistics",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/suppliers/:id",
+          "description": "Get single supplier by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/suppliers",
+          "description": "Create new supplier",
+          "authentication": true,
+          "role_required": null,
+          "validation": "supplierValidation"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/suppliers/:id",
+          "description": "Update supplier",
+          "authentication": true,
+          "role_required": null,
+          "validation": "supplierValidation"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/suppliers/:id",
+          "description": "Delete supplier",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "purchase-orders": {
+      "prefix": "/api/v1/purchase-orders",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/purchase-orders",
+          "description": "Get all purchase orders",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/purchase-orders/stats",
+          "description": "Get purchase order statistics",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/purchase-orders/:id",
+          "description": "Get single purchase order by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/purchase-orders",
+          "description": "Create new purchase order",
+          "authentication": true,
+          "role_required": null,
+          "validation": "poValidation"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/purchase-orders/:id",
+          "description": "Update purchase order",
+          "authentication": true,
+          "role_required": null,
+          "validation": "poValidation"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/purchase-orders/:id",
+          "description": "Delete purchase order",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/purchase-orders/:id/approve",
+          "description": "Approve purchase order",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/purchase-orders/:id/receive",
+          "description": "Receive purchase order (mark as received)",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/purchase-orders/:id/cancel",
+          "description": "Cancel purchase order",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "categories": {
+      "prefix": "/api/v1/categories",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/categories",
+          "description": "Get all categories",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/categories/tree",
+          "description": "Get category tree structure",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/categories/stats",
+          "description": "Get category statistics",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/categories/:id",
+          "description": "Get single category by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/categories",
+          "description": "Create new category",
+          "authentication": true,
+          "role_required": null,
+          "validation": "categoryValidation"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/categories/:id",
+          "description": "Update category",
+          "authentication": true,
+          "role_required": null,
+          "validation": "categoryValidation"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/categories/:id",
+          "description": "Delete category",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "stock-transfers": {
+      "prefix": "/api/v1/stock-transfers",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/stock-transfers",
+          "description": "Get all stock transfers",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/stock-transfers/stats",
+          "description": "Get stock transfer statistics",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/stock-transfers/:id",
+          "description": "Get single stock transfer by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/stock-transfers",
+          "description": "Create new stock transfer",
+          "authentication": true,
+          "role_required": null,
+          "validation": "transferValidation"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/stock-transfers/:id",
+          "description": "Update stock transfer",
+          "authentication": true,
+          "role_required": null,
+          "validation": "updateValidation"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/stock-transfers/:id",
+          "description": "Delete stock transfer",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/stock-transfers/:id/approve",
+          "description": "Approve stock transfer",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/stock-transfers/:id/ship",
+          "description": "Ship stock transfer",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/stock-transfers/:id/receive",
+          "description": "Receive stock transfer",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/stock-transfers/:id/cancel",
+          "description": "Cancel stock transfer",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "stock-movements": {
+      "prefix": "/api/v1/stock-movements",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/stock-movements",
+          "description": "Get all stock movements",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/stock-movements/stats",
+          "description": "Get stock movement statistics",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/stock-movements/summary",
+          "description": "Get stock movement summary",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/stock-movements/item/:item_id",
+          "description": "Get movement history for specific item",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/stock-movements/:id",
+          "description": "Get single stock movement by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/stock-movements",
+          "description": "Create new stock movement",
+          "authentication": true,
+          "role_required": null,
+          "validation": "movementValidation"
+        }
+      ]
+    },
+    "notifications": {
+      "prefix": "/api/v1/notifications",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/notifications",
+          "description": "Get all notifications for current user",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/notifications/stats",
+          "description": "Get notification statistics",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/notifications/mark-all-read",
+          "description": "Mark all notifications as read",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/notifications/delete-all-read",
+          "description": "Delete all read notifications",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/notifications/:id",
+          "description": "Get single notification by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/notifications/:id/read",
+          "description": "Mark notification as read",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/notifications/:id",
+          "description": "Delete notification",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    },
+    "product-assignments": {
+      "prefix": "/api/v1/product-assignments",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/v1/product-assignments",
+          "description": "Get all product assignments with pagination and filters",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/product-assignments/stats",
+          "description": "Get assignment statistics",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/product-assignments/overdue",
+          "description": "Get overdue assignments",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/product-assignments/employee/:employeeId",
+          "description": "Get active assignments for specific employee",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/product-assignments/:id",
+          "description": "Get single assignment by ID",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/product-assignments",
+          "description": "Create new product assignment",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/product-assignments/:id",
+          "description": "Update product assignment",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/product-assignments/:id/acknowledge",
+          "description": "Employee acknowledges assignment",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/product-assignments/:id/return",
+          "description": "Return assigned product",
+          "authentication": true,
+          "role_required": null
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/product-assignments/:id",
+          "description": "Delete assignment (admin only)",
+          "authentication": true,
+          "role_required": null
+        }
+      ]
+    }
+  },
+  "rate_limiting": {
+    "auth_endpoints": {
+      "paths": ["/api/v1/auth/login", "/api/v1/auth/register"],
+      "window_ms": 900000,
+      "max_requests": 5,
+      "message": "Too many login attempts, please try again later"
+    },
+    "general_api": {
+      "window_ms": 60000,
+      "max_requests_production": 60,
+      "max_requests_development": 200,
+      "skip_paths": ["/health", "/api/v1/health"]
+    }
+  },
+  "middleware_notes": {
+    "authentication": {
+      "authenticate": "Used in approvals, locations, maintenance, export, reports",
+      "authMiddleware": "Used in assignments, audit, feeds, items, livestock, users, categories, dashboard, notifications, purchase-orders, stock-movements, stock-transfers, suppliers, product-assignments"
+    },
+    "authorization": {
+      "authorize": "Uses roles array like ['admin', 'manager']",
+      "requireRole": "Uses comma-separated roles like requireRole('admin', 'manager')"
+    },
+    "validation": "express-validator used for input validation on POST/PUT routes",
+    "audit_logging": "Audit middleware logs create/update/delete operations"
+  },
+  "endpoint_summary": {
+    "total_endpoints": 130,
+    "by_method": {
+      "GET": 64,
+      "POST": 38,
+      "PUT": 13,
+      "PATCH": 4,
+      "DELETE": 11
+    },
+    "authentication_required": 125,
+    "public_endpoints": 5,
+    "role_restricted": 28
+  }
+}
