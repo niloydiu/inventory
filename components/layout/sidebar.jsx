@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { logo } from "@/public/images";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -169,8 +171,15 @@ export function Sidebar({ className }) {
       {/* Header */}
       <div className="px-6 py-6 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-purple-600 shadow-lg">
-            <Package className="h-5 w-5 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl">
+            <Image
+              src={logo}
+              alt="Aftab Logo"
+              width={48}
+              height={48}
+              className="object-contain"
+              priority
+            />
           </div>
           <div>
             <h2 className="text-lg font-bold tracking-tight">Inventory</h2>

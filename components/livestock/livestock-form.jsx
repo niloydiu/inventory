@@ -22,20 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-
-const species = [
-  "Cow",
-  "Goat",
-  "Sheep",
-  "Chicken",
-  "Duck",
-  "Pig",
-  "Buffalo",
-  "Other",
-];
-const genders = ["Male", "Female"];
-const healthStatuses = ["healthy", "sick", "under_treatment", "quarantined"];
-const statuses = ["active", "sold", "deceased", "transferred"];
+import {
+  LIVESTOCK_SPECIES,
+  LIVESTOCK_GENDERS,
+  LIVESTOCK_HEALTH_STATUSES,
+  LIVESTOCK_STATUSES,
+} from "@/lib/constants";
 
 export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
   const form = useForm({
@@ -91,7 +83,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {species.map((s) => (
+                    {LIVESTOCK_SPECIES.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>
@@ -133,7 +125,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {genders.map((g) => (
+                    {LIVESTOCK_GENDERS.map((g) => (
                       <SelectItem key={g} value={g}>
                         {g}
                       </SelectItem>
@@ -189,7 +181,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {healthStatuses.map((status) => (
+                    {LIVESTOCK_HEALTH_STATUSES.map((status) => (
                       <SelectItem key={status} value={status}>
                         {status.replace("_", " ").toUpperCase()}
                       </SelectItem>
@@ -250,7 +242,7 @@ export function LivestockForm({ defaultValues, onSubmit, isLoading }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {statuses.map((status) => (
+                    {LIVESTOCK_STATUSES.map((status) => (
                       <SelectItem key={status} value={status}>
                         {status.toUpperCase()}
                       </SelectItem>
