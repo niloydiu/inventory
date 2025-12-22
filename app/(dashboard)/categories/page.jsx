@@ -96,7 +96,9 @@ export default function CategoriesPage() {
       parent_id: category.parent_id?._id || null,
       description: category.description,
       sku_prefix: category.sku_prefix,
+      sku_prefix: category.sku_prefix,
       custom_attributes: category.custom_attributes,
+      image_url: category.image_url,
     });
   }
 
@@ -130,6 +132,13 @@ export default function CategoriesPage() {
               <div className="w-6" />
             )}
             <FolderTree className="h-4 w-4 text-muted-foreground" />
+            {node.image_url && (
+              <img 
+                src={node.image_url} 
+                alt={node.name} 
+                className="h-6 w-6 rounded object-cover border"
+              />
+            )}
             <span className="font-medium">{node.name}</span>
             {node.code && (
               <code className="text-xs text-muted-foreground">
@@ -275,6 +284,16 @@ export default function CategoriesPage() {
                     setFormData({ ...formData, sku_prefix: e.target.value })
                   }
                   placeholder="ELC"
+                />
+              </div>
+              <div>
+                <Label>Image URL</Label>
+                <Input
+                  value={formData.image_url || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, image_url: e.target.value })
+                  }
+                  placeholder="https://example.com/image.jpg"
                 />
               </div>
               <div>
