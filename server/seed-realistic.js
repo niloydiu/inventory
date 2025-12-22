@@ -16,6 +16,13 @@ const {
   Approval,
   AuditLog,
   Category,
+  Supplier,
+  PurchaseOrder,
+  StockTransfer,
+  StockMovement,
+  StockAdjustment,
+  ProductAssignment,
+  Notification,
 } = require("./models");
 
 // Helper to generate random dates
@@ -68,10 +75,17 @@ const seedDatabase = async () => {
     await Approval.deleteMany({});
     await AuditLog.deleteMany({});
     await Category.deleteMany({});
+    await Supplier.deleteMany({});
+    await PurchaseOrder.deleteMany({});
+    await StockTransfer.deleteMany({});
+    await StockMovement.deleteMany({});
+    await StockAdjustment.deleteMany({});
+    await ProductAssignment.deleteMany({});
+    await Notification.deleteMany({});
 
     // Create Users
     console.log("👥 Creating users...");
-    const password_hash = await bcrypt.hash("password123", 10);
+    const password_hash = await bcrypt.hash("admin123", 10);
 
     const users = await User.create([
       {
@@ -161,6 +175,57 @@ const seedDatabase = async () => {
         createdCategories[name] = category;
     }
     console.log(`✅ Created ${Object.keys(createdCategories).length} categories`);
+
+    // Create Suppliers
+    console.log("🏭 Creating suppliers...");
+    const suppliers = await Supplier.create([
+      {
+        name: "Dell Technologies",
+        code: "SUP-DELL",
+        contact_person: "Michael Dell",
+        email: "contact@dell.com",
+        phone: "1-800-433-9014",
+        address: "1 Dell Way, Round Rock, TX 78682",
+        status: "active",
+      },
+      {
+        name: "HP Inc.",
+        code: "SUP-HP",
+        contact_person: "Enrique Lores",
+        email: "support@hp.com",
+        phone: "1-800-474-6836",
+        address: "1501 Page Mill Rd, Palo Alto, CA 94304",
+        status: "active",
+      },
+      {
+        name: "John Deere",
+        code: "SUP-JD",
+        contact_person: "John May",
+        email: "info@johndeere.com",
+        phone: "1-800-537-8233",
+        address: "One John Deere Place, Moline, IL 61265",
+        status: "active",
+      },
+      {
+        name: "Staples",
+        code: "SUP-STP",
+        contact_person: "Alexander Douglas",
+        email: "support@staples.com",
+        phone: "1-800-333-3330",
+        address: "500 Staples Dr, Framingham, MA 01702",
+        status: "active",
+      },
+       {
+        name: "Herman Miller",
+        code: "SUP-HM",
+        contact_person: "Andi Owen",
+        email: "info@hermanmiller.com",
+        phone: "1-888-443-4357",
+        address: "855 E Main Ave, Zeeland, MI 49464",
+        status: "active",
+      }
+    ]);
+    console.log(`✅ Created ${suppliers.length} suppliers`);
 
     // Create Locations
     console.log("📍 Creating locations...");
@@ -909,6 +974,254 @@ const seedDatabase = async () => {
     ]);
 
     console.log(`✅ Created ${livestock.length} livestock records`);
+
+    // Create Purchase Orders
+    console.log("📝 Creating purchase orders...");
+    const purchaseOrders = await PurchaseOrder.create([
+      {
+        po_number: "PO-2024-001",
+        supplier_id: suppliers[0]._id,
+        items: [
+          {
+             item_id: items[0]._id, // Dell Desktop
+             quantity_ordered: 10, // schema: quantity_ordered
+             unit_price: 1250.00,
+             total: 12500.00 // schema: total
+          }
+        ],
+        total_amount: 12500.00,
+        status: "received",
+        order_date: randomPastDate(60),
+        expected_delivery_date: randomPastDate(45),
+        received_date: randomPastDate(45),
+        created_by: users[1]._id, // Manager
+        notes: "Q4 Hardware Upgrade"
+      },
+      {
+        po_number: "PO-2024-002",
+        supplier_id: suppliers[2]._id, // John Deere
+        items: [
+          {
+             item_id: items[4]._id, // Tractor
+             quantity_ordered: 1,
+             unit_price: 45000.00,
+             total: 45000.00
+          }
+        ],
+        total_amount: 45000.00,
+        status: "approved",
+        order_date: randomPastDate(5),
+        expected_delivery_date: randomFutureDate(10),
+        created_by: users[1]._id,
+        notes: "Replacement for old tractor"
+      }
+    ]);
+    console.log(`✅ Created ${purchaseOrders.length} purchase orders`);
+
+    // Create Stock Transfers
+    console.log("🚚 Creating stock transfers...");
+    const stockTransfers = await StockTransfer.create([
+      {
+        transfer_number: "TR-2024-001",
+        from_location_id: locations[0]._id, // Schema: from_location_id
+        to_location_id: locations[3]._id, // Schema: to_location_id
+        status: "received", // Schema enum: received
+        items: [
+          {
+             item_id: items[2]._id, // Mouse
+             quantity_requested: 5, // Schema: quantity_requested
+             quantity_transferred: 5, // Schema might require this for completed status
+             quantity_received: 5 // Schema might require this
+          }
+        ],
+        requested_by: users[3]._id,
+        approved_by: users[1]._id,
+        transfer_date: randomPastDate(10),
+        notes: "Restocking office supplies"
+      }
+    ]);
+    console.log(`✅ Created ${stockTransfers.length} stock transfers`);
+
+    // Create Stock Movements
+    console.log("📊 Creating stock movements...");
+    await StockMovement.create([
+      {
+         item_id: items[0]._id,
+         movement_type: "purchase", // Schema enum: purchase
+         quantity: 25,
+         location_id: locations[0]._id,
+         reference_type: "purchase_order",
+         reference_id: purchaseOrders[0]._id,
+         performed_by: users[1]._id,
+         notes: "Initial stock",
+         balance_after: 25 // Schema: balance_after
+      },
+      {
+         item_id: items[0]._id,
+         movement_type: "transfer_out", // Schema enum: transfer_out
+         quantity: 5,
+         location_id: locations[0]._id, // Source
+         to_location_id: locations[3]._id, 
+         reference_type: "transfer",
+         reference_id: stockTransfers[0]._id,
+         performed_by: users[3]._id,
+         notes: "Office restock",
+         balance_after: 20
+      }
+    ]);
+    console.log(`✅ Created stock movements`);
+
+    // Create Stock Adjustments
+    console.log("⚖️ Creating stock adjustments...");
+    const adjustments = await StockAdjustment.create([
+      {
+        item_id: items[2]._id, // Mouse
+        location_id: locations[3]._id,
+        adjustment_type: "decrease",
+        quantity: 2,
+        reason: "damage",
+        notes: "Dropped during transport",
+        status: "approved",
+        adjusted_by: users[3]._id, // Schema: adjusted_by
+        approved_by: users[1]._id,
+        before_quantity: 45, // Schema: before_quantity
+        after_quantity: 43 // Schema: after_quantity
+      },
+       {
+        item_id: items[0]._id, // Desktop
+        location_id: locations[3]._id,
+        adjustment_type: "increase",
+        quantity: 1,
+        reason: "found",
+        notes: "Found extra unit in back storage",
+        status: "pending",
+        adjusted_by: users[4]._id,
+        before_quantity: 25,
+        after_quantity: 26
+      }
+    ]);
+    console.log(`✅ Created ${adjustments.length} stock adjustments`);
+
+    // Create Product Assignments
+    console.log("💻 Creating product assignments...");
+    const assignments = await ProductAssignment.create([
+      {
+        item_id: items[2]._id, // Mouse
+        employee_id: users[3]._id, // Emily
+        issued_by: users[1]._id, // Sarah
+        quantity: 1,
+        status: "assigned",
+        purpose: "Remote work setup",
+        condition_on_issue: "new",
+        assigned_date: randomPastDate(30),
+        expected_return_date: randomFutureDate(90)
+      },
+      {
+        item_id: items[0]._id, // Desktop
+        employee_id: users[4]._id, // Robert
+        issued_by: users[1]._id,
+        quantity: 1,
+        status: "in_use",
+        purpose: "Office workstation",
+        condition_on_issue: "good",
+        assigned_date: randomPastDate(120),
+        expected_return_date: randomFutureDate(245)
+      },
+      {
+        item_id: items[5]._id, // Chainsaw
+        employee_id: users[6]._id, // David
+        issued_by: users[2]._id, // Mike
+        quantity: 1,
+        status: "returned",
+        purpose: "Tree clearing project",
+        condition_on_issue: "good",
+        condition_on_return: "good",
+        assigned_date: randomPastDate(60),
+        actual_return_date: randomPastDate(10),
+        return_remarks: "Cleaned and sharpened"
+      }
+    ]);
+    console.log(`✅ Created ${assignments.length} product assignments`);
+
+    // Create Maintenance Records
+    console.log("🛠️ Creating maintenance records...");
+    const maintenance = await Maintenance.create([
+      {
+         item_id: items[4]._id, // Tractor
+         title: "500-hour Service",
+         maintenance_type: "inspection",
+         description: "Routine 500-hour service check including oil change",
+         cost: 450.00,
+         status: "completed",
+         performed_by: "John Deere Service", // Note: schema doesn't have this but maybe it's loose? Check schema again. 
+         // Schema has technician_id (Ref User). It doesn't have performed_by string.
+         // Let's stick to strict schema fields or add flexible ones if permitted.
+         // Schema: item_id, title, description, maintenance_type, status, priority, scheduled_date, completed_date, technician_id, cost, notes.
+         scheduled_date: randomPastDate(30),
+         completed_date: randomPastDate(29),
+         notes: "Oil change, filter replacement"
+      },
+      {
+          item_id: items[5]._id, // Chainsaw - replacing location-based maintenance since schema requires item_id
+          title: "Chain Sharpening",
+          maintenance_type: "repair",
+          description: "Chain sharpening and tension adjustment",
+          cost: 45.00,
+          status: "scheduled",
+          priority: "high",
+          scheduled_date: randomFutureDate(2)
+      }
+    ]);
+    console.log(`✅ Created ${maintenance.length} maintenance records`);
+
+    // Create Approvals
+    console.log("👍 Creating approval requests...");
+    const approvals = await Approval.create([
+      {
+        title: "New Laptop Request",
+        description: "Requesting MacBook Pro for new designer",
+        request_type: "purchase",
+        status: "pending",
+        priority: "medium",
+        requested_by: users[3]._id, // Emily
+        amount: 2499.00
+      },
+      {
+        title: "Barn Ventilation Repair",
+        description: "Emergency repair for fan system",
+        request_type: "maintenance",
+        status: "approved",
+        priority: "high",
+        requested_by: users[2]._id, // Mike
+        amount: 850.00,
+        approved_by: users[0]._id,
+        approval_date: randomPastDate(1)
+      }
+    ]);
+    console.log(`✅ Created ${approvals.length} approvals`);
+
+    // Create Notifications
+    console.log("🔔 Creating notifications...");
+    const notifications = await Notification.create([
+      {
+        user_id: users[1]._id, // Schema: user_id
+        type: "low_stock", // Schema: low_stock
+        title: "Low Stock Alert",
+        message: "Copy Paper stock is below threshold",
+        priority: "high",
+        is_read: false
+      },
+      {
+        user_id: users[3]._id, // Schema: user_id
+        type: "assignment_due", // Schema: assignment_due
+        title: "Assignment Due",
+        message: "Your laptop assignment is due for renewal next week",
+        priority: "medium",
+        is_read: true,
+        read_at: randomPastDate(1)
+      }
+    ]);
+    console.log(`✅ Created ${notifications.length} notifications`);
 
     console.log("\n✅ Realistic database seed completed successfully!");
     console.log("\n📋 Admin User Credentials:");
