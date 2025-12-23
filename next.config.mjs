@@ -68,9 +68,20 @@ const nextConfig = {
       },
     ];
   },
-  // API routes are handled by Vercel rewrites in production
-  // In local development with 'npm run dev', the custom server (server.js) handles routing
-  // So we don't need Next.js rewrites here
+  // API is hosted at /api (via api/index.js) on Vercel
+  // We rewrite /api/v1/* to /api to match the Express app structure
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: "/api",
+      },
+      {
+        source: "/health",
+        destination: "/api",
+      },
+    ];
+  },
 
 };
 
