@@ -35,7 +35,7 @@ export function RegisterForm() {
     setIsLoading(true)
     try {
       await register(data)
-      toast.success("Registration successful! Please login.")
+      toast.success("Registration successful! Redirecting to dashboard...")
     } catch (error) {
       toast.error(error.message || "Failed to register")
     } finally {

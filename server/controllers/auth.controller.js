@@ -168,11 +168,12 @@ exports.login = async (req, res) => {
     );
 
     // Set httpOnly cookie for security
-    // Use sameSite: "none" for cross-origin requests (required when frontend and API are on different domains)
+    // Use sameSite: "lax" for same-origin requests in production (Vercel uses same domain)
+    // Using "none" is only for cross-origin and requires Secure=true
     res.cookie("inventory_auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Must be true when sameSite is "none"
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" for cross-origin, "lax" for same-origin
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax", 
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: "/",
     });
@@ -231,11 +232,10 @@ exports.logout = async (req, res) => {
     console.log("[Auth Controller] Logout request");
 
     // Clear the httpOnly cookie
-    // Use sameSite: "none" for cross-origin requests (must match login cookie settings)
     res.clearCookie("inventory_auth_token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Must be true when sameSite is "none"
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Match login cookie settings
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax",
       path: "/",
     });
 
