@@ -34,6 +34,7 @@ export function ItemTable({ items, onDelete, canEdit }) {
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="w-[50px]"></TableHead>
             <TableHead className="font-semibold">Name</TableHead>
             <TableHead className="font-semibold">Category</TableHead>
             <TableHead className="font-semibold">Quantity</TableHead>
@@ -49,6 +50,15 @@ export function ItemTable({ items, onDelete, canEdit }) {
               key={item._id}
               className="hover:bg-muted/30 transition-colors"
             >
+              <TableCell>
+                {item.image_url && (
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className="h-8 w-8 rounded-md object-cover"
+                  />
+                )}
+              </TableCell>
               <TableCell className="font-semibold">{item.name}</TableCell>
               <TableCell>
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">

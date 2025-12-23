@@ -2,7 +2,7 @@
 // All public images should be referenced through this file
 
 // Logo
-export const logo = "/aftab-logo.png";
+export const logo = "/favicon.png";
 
 // SVG Icons
 export const fileIcon = "/file.svg";

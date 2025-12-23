@@ -13,6 +13,7 @@
     "lint": "eslint",
     "db:seed": "node server/seed.js",
     "db:seed:realistic": "node server/seed-realistic.js",
+    "db:seed:complete": "node server/seed-complete.js",
     "db:seed:production": "node seed-production.js",
     "vercel:deploy": "vercel --prod"
   },

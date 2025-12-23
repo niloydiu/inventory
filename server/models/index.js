@@ -14,6 +14,8 @@ const Category = require("./Category");
 const StockMovement = require("./StockMovement");
 const StockTransfer = require("./StockTransfer");
 const Notification = require("./Notification");
+const StockAdjustment = require("./StockAdjustment");
+const ProductAssignment = require("./ProductAssignment");
 
 module.exports = {
   User,
@@ -32,4 +34,6 @@ module.exports = {
   StockMovement,
   StockTransfer,
   Notification,
+  StockAdjustment,
+  ProductAssignment,
 };

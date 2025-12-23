@@ -13,6 +13,18 @@ const nextConfig = {
         port: "6210",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "loremflickr.com",
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+      },
+      {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+      },
     ],
   },
   // Add headers to disable caching

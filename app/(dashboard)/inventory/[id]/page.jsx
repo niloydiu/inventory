@@ -146,6 +146,21 @@ export default function ItemDetailsPage() {
           </CardContent>
         </Card>
         
+        {item.image_url && (
+          <Card className="md:col-span-2 overflow-hidden">
+            <CardHeader>
+              <CardTitle>Item Image</CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center bg-muted/20 p-6">
+              <img 
+                src={item.image_url} 
+                alt={item.name} 
+                className="max-h-[400px] w-auto object-contain rounded-lg shadow-sm"
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {item.description && (
           <Card className="md:col-span-2">
             <CardHeader>

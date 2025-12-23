@@ -1,11 +1,73 @@
 # Vercel
+
 .vercel
 
-# Local environment
+# Local environment files
+
 .env.local
 .env.production.local
 .env.development.local
 
-# MongoDB
+# Development files
+
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Testing
+
+/coverage
+
+# MongoDB dumps
+
 dump/
-*.log
+\*.log
+
+# Build outputs (Next.js builds on Vercel)
+
+.next/
+out/
+build/
+
+# Cache directories
+
+.turbo
+.cache
+
+# OS files
+
+.DS_Store
+\*.pem
+
+# IDE
+
+.vscode
+.idea
+
+# PM2
+
+ecosystem.config.js
+logs/
+\*.log
+
+# Scripts (not needed in production)
+
+setup-backend.sh
+setup-mongodb.sh
+deploy.sh
+deploy-vercel.sh
+clear-cache.sh
+test-api.sh
+
+# Documentation
+
+\*.md
+!README.md
+
+# Development servers
+
+server.js
+next-server.js
+proxy.js
