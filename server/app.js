@@ -307,6 +307,19 @@ app.get("/health", (req, res) => {
   });
 });
 
+// API v1 health check (for Pages Router)
+app.get(`${API_PREFIX}/health`, (req, res) => {
+  const mongoose = require("mongoose");
+  res.json({
+    success: true,
+    message: "API is running",
+    timestamp: new Date().toISOString(),
+    mongo: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
