@@ -17,13 +17,8 @@ connectDB();
 // Trust proxy configuration
 // In production behind a proxy/load balancer, this should be set to the proxy hop count
 // For development with Next.js custom server, we trust the loopback
-if (process.env.NODE_ENV === "production") {
-  // In production, trust the first proxy (Vercel, Nginx, etc.)
-  app.set("trust proxy", 1);
-} else {
-  // In development, trust loopback for Next.js custom server
-  app.set("trust proxy", "loopback");
-}
+const trustProxyValue = process.env.NODE_ENV === "production" ? 1 : "loopback";
+app.set("trust proxy", trustProxyValue);
 
 // CORS - MUST BE FIRST, before any other middleware
 // Completely open CORS - Allow ALL origins (* equivalent)
