@@ -116,6 +116,18 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Account security - failed login tracking
+    failed_login_attempts: {
+      type: Number,
+      default: 0,
+    },
+    account_locked_until: {
+      type: Date,
+      default: null,
+    },
+    last_failed_login: {
+      type: Date,
+    },
     last_login: {
       type: Date,
     },

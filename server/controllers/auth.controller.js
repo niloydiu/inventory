@@ -71,10 +71,7 @@ exports.updateProfile = async (req, res) => {
     // Check uniqueness if email or username changed
     if (email || username) {
       const existingUser = await User.findOne({
-        $and: [
-          { _id: { $ne: userId } },
-          { $or: [{ email }, { username }] }
-        ]
+        $and: [{ _id: { $ne: userId } }, { $or: [{ email }, { username }] }],
       });
 
       if (existingUser) {
@@ -132,8 +129,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Get user with password hash
-    const user = await User.findOne({ username }).select("+password_hash");
+    // Get user with password hash and security fields
+    const user = await User.findOne({ username }).select(
+      "+password_hash +failed_login_attempts +account_locked_until +last_failed_login"
+    );
 
     if (!user) {
       console.log("[Auth Controller] User not found:", username);
@@ -143,18 +142,75 @@ exports.login = async (req, res) => {
       });
     }
 
+    // Check if account is locked
+    const now = new Date();
+    if (user.account_locked_until && user.account_locked_until > now) {
+      const remainingMinutes = Math.ceil(
+        (user.account_locked_until - now) / (1000 * 60)
+      );
+      console.log(
+        `[Auth Controller] Account locked for user: ${username}, remaining: ${remainingMinutes} minutes`
+      );
+      return res.status(423).json({
+        success: false,
+        message: `Account temporarily locked due to multiple failed login attempts. Please try again in ${remainingMinutes} minute(s).`,
+      });
+    }
+
+    // Reset failed attempts if lock period has expired
+    if (user.account_locked_until && user.account_locked_until <= now) {
+      user.failed_login_attempts = 0;
+      user.account_locked_until = null;
+      await user.save();
+    }
+
     // Verify password
     const isValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isValid) {
       console.log("[Auth Controller] Invalid password for user:", username);
+
+      // Increment failed login attempts
+      user.failed_login_attempts = (user.failed_login_attempts || 0) + 1;
+      user.last_failed_login = now;
+
+      // Lock account after 5 failed attempts
+      const MAX_FAILED_ATTEMPTS = 5;
+      const LOCKOUT_DURATION_MINUTES = 30;
+
+      if (user.failed_login_attempts >= MAX_FAILED_ATTEMPTS) {
+        user.account_locked_until = new Date(
+          now.getTime() + LOCKOUT_DURATION_MINUTES * 60 * 1000
+        );
+        await user.save();
+
+        console.log(
+          `[Auth Controller] Account locked for user: ${username} after ${MAX_FAILED_ATTEMPTS} failed attempts`
+        );
+        return res.status(423).json({
+          success: false,
+          message: `Account locked due to ${MAX_FAILED_ATTEMPTS} failed login attempts. Please try again in ${LOCKOUT_DURATION_MINUTES} minutes.`,
+        });
+      }
+
+      await user.save();
+
+      const attemptsRemaining =
+        MAX_FAILED_ATTEMPTS - user.failed_login_attempts;
       return res.status(401).json({
         success: false,
-        message: "Invalid credentials",
+        message: `Invalid credentials. ${attemptsRemaining} attempt(s) remaining before account lockout.`,
       });
     }
 
     console.log("[Auth Controller] Password verified for user:", username);
+
+    // Reset failed login attempts on successful login
+    user.failed_login_attempts = 0;
+    user.account_locked_until = null;
+    user.last_login = now;
+    user.login_count = (user.login_count || 0) + 1;
+    await user.save();
 
     // Generate token
     const token = jwt.sign(
@@ -173,7 +229,7 @@ exports.login = async (req, res) => {
     res.cookie("inventory_auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax", 
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: "/",
     });

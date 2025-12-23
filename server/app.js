@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const mongoSanitize = require("express-mongo-sanitize");
 const connectDB = require("./config/database");
 const validateEnv = require("./config/validateEnv");
 
@@ -17,8 +18,11 @@ connectDB();
 // Trust proxy configuration
 // In production behind a proxy/load balancer, this should be set to the proxy hop count
 // For development with Next.js custom server, we trust the loopback
-const trustProxyValue = process.env.NODE_ENV === "production" ? 1 : "loopback";
-app.set("trust proxy", trustProxyValue);
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+} else {
+  app.set("trust proxy", "loopback");
+}
 
 // CORS - MUST BE FIRST, before any other middleware
 // Completely open CORS - Allow ALL origins (* equivalent)
@@ -167,14 +171,15 @@ app.use(
 // Rate limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per window
+  max: 3, // Only 3 requests per window (stricter security)
   message: {
     success: false,
-    message: "Too many login attempts, please try again later",
+    message: "Too many login attempts. Please try again in 15 minutes.",
   },
   standardHeaders: true,
   legacyHeaders: false,
   validate: { trustProxy: false }, // Disable trust proxy validation warning
+  skipSuccessfulRequests: false, // Count all requests, not just failed ones
 });
 
 // More flexible API rate limiter
@@ -200,15 +205,34 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
-// Manual NoSQL injection protection middleware
+// Stricter body size check for auth endpoints (after parsing)
+app.use((req, res, next) => {
+  const isAuthEndpoint =
+    req.path.includes("/auth/login") || req.path.includes("/auth/register");
+
+  if (isAuthEndpoint && req.body) {
+    const bodySize = JSON.stringify(req.body).length;
+    if (bodySize > 1024) {
+      // 1KB limit for auth endpoints
+      return res.status(413).json({
+        success: false,
+        message: "Request body too large for authentication endpoint",
+      });
+    }
+  }
+  next();
+});
+
+// NoSQL injection protection - manual sanitization
+// express-mongo-sanitize can conflict with Next.js, so we do it manually
 app.use((req, res, next) => {
   const sanitize = (obj) => {
-    if (obj && typeof obj === "object") {
+    if (obj && typeof obj === "object" && !Array.isArray(obj)) {
       Object.keys(obj).forEach((key) => {
         if (key.startsWith("$") || key.includes(".")) {
           delete obj[key];
-          console.warn(`[Security] Removed potentially malicious key: ${key}`);
-        } else if (typeof obj[key] === "object") {
+          console.warn(`[Security] Removed malicious key: ${key}`);
+        } else if (typeof obj[key] === "object" && obj[key] !== null) {
           sanitize(obj[key]);
         }
       });
@@ -216,9 +240,14 @@ app.use((req, res, next) => {
     return obj;
   };
 
-  if (req.body) sanitize(req.body);
-  if (req.query) sanitize(req.query);
-  if (req.params) sanitize(req.params);
+  // Only sanitize writable objects
+  if (req.body && typeof req.body === "object") {
+    try {
+      sanitize(req.body);
+    } catch (err) {
+      console.warn("[Security] Error sanitizing body:", err.message);
+    }
+  }
 
   next();
 });
@@ -310,33 +339,34 @@ app.get("/health", (req, res) => {
 // API v1 health check (for Pages Router)
 app.get(`${API_PREFIX}/health`, async (req, res) => {
   const mongoose = require("mongoose");
-  
+
   // Try to ensure DB connection
   let dbStatus = "disconnected";
   let dbError = null;
-  
+
   try {
     // Check current connection state
     if (mongoose.connection.readyState !== 1) {
       // Try to connect if not connected
       await connectDB();
     }
-    dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+    dbStatus =
+      mongoose.connection.readyState === 1 ? "connected" : "disconnected";
   } catch (err) {
     dbError = err.message;
     dbStatus = "error";
   }
-  
+
   res.json({
     success: dbStatus === "connected",
-    message: dbStatus === "connected" ? "API is running" : "API running but DB issue",
+    message:
+      dbStatus === "connected" ? "API is running" : "API running but DB issue",
     timestamp: new Date().toISOString(),
     mongo: dbStatus,
     mongoError: dbError,
     environment: process.env.NODE_ENV || "development",
   });
 });
-
 
 // 404 handler
 app.use((req, res) => {

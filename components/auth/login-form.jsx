@@ -59,7 +59,9 @@ export function LoginForm() {
               <FormLabel className="text-sm font-semibold">Username</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter your username"
+                  placeholder={
+                    process.env.NODE_ENV === "development" ? "admin" : ""
+                  }
                   className="h-11 border-2 focus:border-primary transition-colors"
                   {...field}
                 />
@@ -77,7 +79,9 @@ export function LoginForm() {
               <FormControl>
                 <Input
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder={
+                    process.env.NODE_ENV === "development" ? "admin123" : ""
+                  }
                   className="h-11 border-2 focus:border-primary transition-colors"
                   {...field}
                 />
