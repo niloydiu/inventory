@@ -27,62 +27,6 @@ const nextConfig = {
       },
     ],
   },
-  // Add headers to disable caching
-  async headers() {
-    return [
-      {
-        source: "/api/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate, private",
-          },
-          { key: "Pragma", value: "no-cache" },
-          { key: "Expires", value: "0" },
-        ],
-      },
-      {
-        // Apply no-cache headers to all authenticated pages
-        source:
-          "/(dashboard|inventory|assignments|livestock|feeds|locations|users|maintenance|reservations|approvals|audit-logs|reports|settings|categories|stock-movements|stock-transfers|suppliers|purchase-orders|product-assignments|notifications)/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate, private",
-          },
-          { key: "Pragma", value: "no-cache" },
-          { key: "Expires", value: "0" },
-        ],
-      },
-      {
-        // Apply no-cache headers to auth pages
-        source: "/(login|register|logout)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate, private",
-          },
-          { key: "Pragma", value: "no-cache" },
-          { key: "Expires", value: "0" },
-        ],
-      },
-    ];
-  },
-  // API is hosted at /api (via api/index.js) on Vercel
-  // We rewrite /api/v1/* to /api to match the Express app structure
-  async rewrites() {
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination: "/api",
-      },
-      {
-        source: "/health",
-        destination: "/api",
-      },
-    ];
-  },
-
 };
 
 export default nextConfig;
