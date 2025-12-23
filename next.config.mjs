@@ -68,20 +68,10 @@ const nextConfig = {
       },
     ];
   },
-  // API routes will be handled by custom server in local dev (server.js)
-  // On Vercel, these are handled by vercel.json rewrites pointing to api/index.js
-  async rewrites() {
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination: "/api/:path*", // For local dev fallback if not using custom server
-      },
-      {
-        source: "/health",
-        destination: "/api/health",
-      },
-    ];
-  },
+  // API routes are handled by Vercel rewrites in production
+  // In local development with 'npm run dev', the custom server (server.js) handles routing
+  // So we don't need Next.js rewrites here
+
 };
 
 export default nextConfig;
