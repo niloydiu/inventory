@@ -62,6 +62,59 @@ exports.register = async (req, res) => {
   }
 };
 
+// Update profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const { full_name, email, username } = req.body;
+    const userId = req.user.user_id;
+
+    // Check uniqueness if email or username changed
+    if (email || username) {
+      const existingUser = await User.findOne({
+        $and: [
+          { _id: { $ne: userId } },
+          { $or: [{ email }, { username }] }
+        ]
+      });
+
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Username or email already exists",
+        });
+      }
+    }
+
+    const updates = {};
+    if (full_name) updates.full_name = full_name;
+    if (email) updates.email = email;
+    if (username) updates.username = username;
+
+    const user = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    }).select("-password_hash");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+    });
+  }
+};
+
 // Login
 exports.login = async (req, res) => {
   try {
