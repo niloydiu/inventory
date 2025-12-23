@@ -25,9 +25,9 @@ yarn-error.log*
 dump/
 \*.log
 
-# Build outputs (Next.js builds on Vercel)
-
-.next/
+# Build outputs - DO NOT IGNORE .next/ - Vercel needs it!
+# Vercel builds .next on their servers and uses it for deployment
+# .next/  <-- REMOVED - This was causing 404s!
 out/
 build/
 
