@@ -308,13 +308,31 @@ app.get("/health", (req, res) => {
 });
 
 // API v1 health check (for Pages Router)
-app.get(`${API_PREFIX}/health`, (req, res) => {
+app.get(`${API_PREFIX}/health`, async (req, res) => {
   const mongoose = require("mongoose");
+  
+  // Try to ensure DB connection
+  let dbStatus = "disconnected";
+  let dbError = null;
+  
+  try {
+    // Check current connection state
+    if (mongoose.connection.readyState !== 1) {
+      // Try to connect if not connected
+      await connectDB();
+    }
+    dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+  } catch (err) {
+    dbError = err.message;
+    dbStatus = "error";
+  }
+  
   res.json({
-    success: true,
-    message: "API is running",
+    success: dbStatus === "connected",
+    message: dbStatus === "connected" ? "API is running" : "API running but DB issue",
     timestamp: new Date().toISOString(),
-    mongo: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    mongo: dbStatus,
+    mongoError: dbError,
     environment: process.env.NODE_ENV || "development",
   });
 });
