@@ -36,7 +36,10 @@ function loadSpec() {
     
     throw new Error("OpenAPI spec file not found in any expected location");
   } catch (err) {
-    console.warn("Failed to load OpenAPI spec (this is expected in serverless/production):", err.message);
+    // Only log if not in production or if explicitly debugging
+    if (process.env.NODE_ENV !== "production" || process.env.ENABLE_API_DOCS === "true") {
+      console.warn("Failed to load OpenAPI spec:", err.message);
+    }
     spec = {
       openapi: "3.0.1",
       info: { title: "Inventory API", version: "1.0.0" },
