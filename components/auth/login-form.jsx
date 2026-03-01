@@ -21,6 +21,7 @@ import { Loader2 } from "lucide-react";
 export function LoginForm() {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const form = useForm({
     resolver: zodResolver(loginSchema),
@@ -31,6 +32,7 @@ export function LoginForm() {
   });
 
   async function onSubmit(data) {
+    setServerError("");
     setIsLoading(true);
     console.log("[LoginForm] Submitting login form...");
     try {
@@ -42,6 +44,8 @@ export function LoginForm() {
       await new Promise((resolve) => setTimeout(resolve, 100));
     } catch (error) {
       console.error("[LoginForm] Login failed:", error);
+      const message = error?.message || "Login failed";
+      setServerError(message);
       toast.error(error.message || "Failed to login");
       setIsLoading(false);
     }
@@ -98,6 +102,11 @@ export function LoginForm() {
           {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
           {isLoading ? "Signing in..." : "Sign In"}
         </Button>
+        {serverError && (
+          <p className="text-center text-sm text-destructive" role="alert">
+            {serverError}
+          </p>
+        )}
       </form>
     </Form>
   );
