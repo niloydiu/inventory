@@ -6,14 +6,22 @@ const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
 const connectDB = require("./config/database");
 const validateEnv = require("./config/validateEnv");
+const { ensureAdminAccountFromEnv } = require("./utils/admin-account");
 
 // Validate environment variables
 validateEnv();
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB and keep the admin credentials synced with the environment
+(async () => {
+  try {
+    await connectDB();
+    await ensureAdminAccountFromEnv();
+  } catch (err) {
+    console.error("❌ Database initialization failed:", err);
+  }
+})();
 
 // Trust proxy configuration
 // In production behind a proxy/load balancer, this should be set to the proxy hop count

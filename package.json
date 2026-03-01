@@ -15,6 +15,7 @@
     "db:seed:realistic": "node server/seed-realistic.js",
     "db:seed:complete": "node server/seed-complete.js",
     "db:seed:production": "node seed-production.js",
+    "generate-admin": "node scripts/generate-admin.js",
     "vercel:deploy": "vercel --prod"
   },
   "dependencies": {
