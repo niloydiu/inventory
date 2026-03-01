@@ -36,27 +36,42 @@ const User = mongoose.model('User', UserSchema);
 async function seedProductionDatabase() {
   try {
     console.log('🔍 Checking for existing admin user...');
-    
-    const existingAdmin = await User.findOne({ username: 'admin' });
-    
+
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@inventory.com';
+
+    const existingAdmin = await User.findOne({ username: adminUsername });
+
     if (existingAdmin) {
-      console.log('⚠️  Admin user already exists!');
-      console.log('   Username: admin');
+      console.log(`⚠️  Admin user already exists! (${adminUsername})`);
+      console.log('   Username:', existingAdmin.username);
       console.log('   Email:', existingAdmin.email);
       console.log('   Role:', existingAdmin.role);
+
+      // If an ADMIN_PASSWORD is provided via env, update the stored password to match
+      if (process.env.ADMIN_PASSWORD) {
+        const newHashed = await bcrypt.hash(adminPassword, 10);
+        // Use password_hash to match application schema
+        existingAdmin.password_hash = newHashed;
+        if (process.env.ADMIN_EMAIL) existingAdmin.email = adminEmail;
+        await existingAdmin.save();
+        console.log('\n🔄 Admin password updated from environment variable.');
+      }
+
       console.log('\n✅ Database is already seeded.');
       await mongoose.connection.close();
       process.exit(0);
     }
 
     console.log('📝 Creating admin user...');
-    
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    
+
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
     const adminUser = await User.create({
-      username: 'admin',
-      email: 'admin@inventory.com',
-      password: hashedPassword,
+      username: adminUsername,
+      email: adminEmail,
+      password_hash: hashedPassword,
       role: 'admin',
       full_name: 'System Administrator',
       is_active: true
@@ -64,12 +79,16 @@ async function seedProductionDatabase() {
 
     console.log('\n✅ Production database seeded successfully!');
     console.log('\n📋 Admin User Details:');
-    console.log('   Username: admin');
-    console.log('   Password: admin123');
-    console.log('   Email: admin@inventory.com');
+    console.log('   Username:', adminUsername);
+    if (process.env.ADMIN_PASSWORD) {
+      console.log('   Password: (from ADMIN_PASSWORD env)');
+    } else {
+      console.log('   Password: admin123');
+    }
+    console.log('   Email:', adminEmail);
     console.log('   Role: admin');
     console.log('\n⚠️  IMPORTANT: Change the admin password after first login!');
-    
+
     await mongoose.connection.close();
     console.log('\n🔌 Database connection closed.');
     process.exit(0);
