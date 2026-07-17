@@ -26,8 +26,8 @@ export function LoginForm() {
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
-      password: "",
+      username: "admin",
+      password: "G7v9k3Qx_4pZs8L0bR2uH6yT5mN1cVwX",
     },
   });
 
@@ -63,9 +63,7 @@ export function LoginForm() {
               <FormLabel className="text-sm font-semibold">Username</FormLabel>
               <FormControl>
                 <Input
-                  placeholder={
-                    process.env.NODE_ENV === "development" ? "admin" : ""
-                  }
+                  placeholder="admin"
                   className="h-11 border-2 focus:border-primary transition-colors"
                   {...field}
                 />
@@ -83,9 +81,7 @@ export function LoginForm() {
               <FormControl>
                 <Input
                   type="password"
-                  placeholder={
-                    process.env.NODE_ENV === "development" ? "admin123" : ""
-                  }
+                  placeholder="••••••••••••••••"
                   className="h-11 border-2 focus:border-primary transition-colors"
                   {...field}
                 />

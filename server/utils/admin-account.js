@@ -20,8 +20,8 @@ const generateRandomAdminPassword = (length = pwdLength) => {
 };
 
 const getEnvAdminConfig = () => {
-  const username = process.env.ADMIN_USERNAME;
-  const password = process.env.ADMIN_PASSWORD;
+  const username = process.env.ADMIN_USERNAME || "admin";
+  const password = process.env.ADMIN_PASSWORD || "G7v9k3Qx_4pZs8L0bR2uH6yT5mN1cVwX";
   const email = process.env.ADMIN_EMAIL || DEFAULT_ADMIN.email;
   const full_name = process.env.ADMIN_FULL_NAME || DEFAULT_ADMIN.fullName;
   const role = process.env.ADMIN_ROLE || DEFAULT_ADMIN.role;

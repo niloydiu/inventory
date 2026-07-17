@@ -179,7 +179,7 @@ app.use(
 // Rate limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // Only 3 requests per window (stricter security)
+  max: 20, // 20 requests per window (more user-friendly for a demo)
   message: {
     success: false,
     message: "Too many login attempts. Please try again in 15 minutes.",
@@ -187,7 +187,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   validate: { trustProxy: false }, // Disable trust proxy validation warning
-  skipSuccessfulRequests: false, // Count all requests, not just failed ones
+  skipSuccessfulRequests: true, // Do not count successful logins towards the rate limit
 });
 
 // More flexible API rate limiter
